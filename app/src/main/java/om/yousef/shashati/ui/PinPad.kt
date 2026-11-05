@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -124,6 +125,10 @@ fun PinGate(title: String, onSuccess: (recovered: Boolean) -> Unit) {
     var input by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
     var blocked by remember { mutableLongStateOf(Prefs.blockedSeconds()) }
+    val confirmFocus = remember { FocusRequester() }
+    LaunchedEffect(recoverMode, input.length) {
+        if (recoverMode && input.length == 10) runCatching { confirmFocus.requestFocus() }
+    }
     LaunchedEffect(blocked > 0) {
         while (Prefs.blockedSeconds() > 0) {
             blocked = Prefs.blockedSeconds()
@@ -175,7 +180,7 @@ fun PinGate(title: String, onSuccess: (recovered: Boolean) -> Unit) {
                     Keypad(onDigit, onDelete)
                     if (recoverMode) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Pill("تأكيد", selected = input.length >= 4, fontSize = 14, hPad = 22.dp) {
+                            Pill("تأكيد", selected = input.length >= 4, modifier = Modifier.focusRequester(confirmFocus), fontSize = 14, hPad = 22.dp) {
                                 if (input.length >= 4) submit(input)
                             }
                             Pill("رجوع", selected = false, fontSize = 14, hPad = 18.dp) {
@@ -201,6 +206,10 @@ fun PinSetup(askPin: Boolean, askRecovery: Boolean, onDone: () -> Unit, onCancel
     var first by remember { mutableStateOf("") }
     var input by remember { mutableStateOf("") }
     var mismatch by remember { mutableStateOf(false) }
+    val saveFocus = remember { FocusRequester() }
+    LaunchedEffect(step, input.length) {
+        if (step == 2 && input.length == 10) runCatching { saveFocus.requestFocus() }
+    }
 
     fun finishPinOrNext() {
         if (askRecovery) { step = 2; input = "" } else onDone()
@@ -237,10 +246,11 @@ fun PinSetup(askPin: Boolean, askRecovery: Boolean, onDone: () -> Unit, onCancel
                 )
                 if (step == 2) Dots(input.length.coerceAtLeast(1), input.length) else Dots(4, input.length)
                 if (mismatch) Text("الرقمان غير متطابقين، حاول مرة أخرى", fontSize = 12.sp, color = Color(0xFFFFB3B3))
+                if (step == 2 && input.length >= 4) Text("بعد إدخال الرمز انزل بالسهم إلى «حفظ» واضغط OK", fontSize = 11.sp, color = C.gold)
                 Keypad(onDigit, onDelete)
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (step == 2) {
-                        Pill("حفظ", selected = input.length >= 4, fontSize = 14, hPad = 22.dp) {
+                        Pill("حفظ", selected = input.length >= 4, modifier = Modifier.focusRequester(saveFocus), fontSize = 14, hPad = 22.dp) {
                             if (input.length >= 4) { Prefs.setRecovery(input); onDone() }
                         }
                     }

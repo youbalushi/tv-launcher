@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -118,8 +119,10 @@ fun Focusable(
             .clip(shape)
             .background(if (focused && focusedBackground != null) focusedBackground else background, shape)
             .border(
-                width = if (focused) 3.dp else 1.dp,
-                color = if (focused) Color.White else if (showBorder) C.border else Color.Transparent,
+                width = if (focused) 3.5.dp else 1.dp,
+                // On light (selected) backgrounds a white frame is invisible, so use gold there.
+                color = if (focused) (if (background.luminance() > 0.6f || focusedBackground?.luminance()?.let { it > 0.6f } == true) C.gold else Color.White)
+                else if (showBorder) C.border else Color.Transparent,
                 shape = shape
             )
             .clickable(
