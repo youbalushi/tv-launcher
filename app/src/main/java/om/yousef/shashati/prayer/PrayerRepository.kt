@@ -66,6 +66,13 @@ object PrayerRepository {
     fun previous(now: LocalDateTime = LocalDateTime.now()): PrayerEvent =
         eventsAround(now).last { !it.time.isAfter(now) }
 
+    /** For the custom Omani method the angles are sent explicitly. */
+    private fun methodSettings(): String {
+        if (Prefs.method != Methods.OMAN) return ""
+        val m = Methods.byId(Methods.OMAN)
+        return "&methodSettings=${m.fajr},null,${m.ishaAngle}"
+    }
+
     /** Fetches this month and next from the internet once per day (or when forced). */
     suspend fun refreshIfNeeded(force: Boolean = false): Boolean = withContext(Dispatchers.IO) {
         val today = LocalDate.now().format(dayKey)
@@ -78,6 +85,7 @@ object PrayerRepository {
             for (ym in listOf(month, month.plusMonths(1))) {
                 val url = "https://api.aladhan.com/v1/calendar/${ym.year}/${ym.monthValue}" +
                     "?latitude=${w.lat}&longitude=${w.lng}&method=${Prefs.method}&school=0" +
+                    methodSettings() +
                     "&timezonestring=Asia/Muscat"
                 val conn = URL(url).openConnection() as HttpURLConnection
                 conn.connectTimeout = 15_000

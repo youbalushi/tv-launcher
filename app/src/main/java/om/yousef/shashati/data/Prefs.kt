@@ -64,7 +64,7 @@ object Prefs {
     // Location and prayer calculation
     var govIndex by int("govIndex", 0)
     var wilIndex by int("wilIndex", 0)
-    var method by int("method", 3)
+    var method by int("method2", 99)
     var offsets by intList("offsets", listOf(0, 0, 0, 0, 0))
 
     // Adhan and iqama notifications

@@ -21,13 +21,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,12 +36,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import om.yousef.shashati.data.AppsRepository
 import om.yousef.shashati.data.Locations
@@ -96,7 +98,6 @@ fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Uni
                                 modifier = Modifier.fillMaxWidth().height(48.dp),
                                 background = if (section == i) Color.White else C.glass,
                                 scaleOnFocus = 1.03f,
-                                onFocus = { if (sub == null) section = i },
                                 onClick = { section = i; sub = null }
                             ) {
                                 Text(
@@ -209,14 +210,20 @@ private fun FavoritesSection(onChanged: () -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SectionHeader(if (picking == -1) "اختر تطبيقًا لإضافته" else "اختر بديلًا لـ «${label(favs[picking])}»")
             val options = listOf(AppsRepository.CHANNELS) + installed.map { it.packageName }
+            val firstOption = remember { FocusRequester() }
+            LaunchedEffect(Unit) {
+                delay(100)
+                runCatching { firstOption.requestFocus() }
+            }
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(4.dp)
             ) {
-                items(options) { p ->
-                    Focusable(modifier = Modifier.fillMaxWidth().height(44.dp), onClick = {
+                items(options.size) { idx ->
+                    val p = options[idx]
+                    Focusable(modifier = Modifier.fillMaxWidth().height(44.dp), focusRequester = if (idx == 0) firstOption else null, onClick = {
                         val list = favs.toMutableList()
                         if (picking == -1) { if (p !in list) list.add(p) } else list[picking] = p
                         picking = -2

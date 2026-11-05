@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -52,22 +54,22 @@ fun Keypad(onDigit: (Char) -> Unit, onDelete: () -> Unit, focusFirst: Boolean = 
     }
     val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫")
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             for (r in 0 until 4) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     for (c in 0 until 3) {
                         val k = keys[r * 3 + c]
                         if (k.isEmpty()) {
-                            Spacer(Modifier.size(66.dp, 40.dp))
+                            Spacer(Modifier.size(58.dp, 32.dp))
                         } else {
                             Focusable(
-                                modifier = Modifier.size(66.dp, 40.dp),
+                                modifier = Modifier.size(58.dp, 32.dp),
                                 shape = RoundedCornerShape(10.dp),
                                 focusRequester = if (k == "1") first else null,
                                 background = Color(0x1AFFFFFF),
                                 onClick = { if (k == "⌫") onDelete() else onDigit(k[0]) }
                             ) {
-                                Text(k, fontSize = 18.sp, modifier = Modifier.align(Alignment.Center))
+                                Text(k, fontSize = 16.sp, modifier = Modifier.align(Alignment.Center))
                             }
                         }
                     }
@@ -110,7 +112,7 @@ fun GlassPanel(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
         modifier
             .background(Color(0x12FFFFFF), RoundedCornerShape(20.dp))
             .border(1.dp, C.border, RoundedCornerShape(20.dp))
-            .padding(horizontal = 28.dp, vertical = 22.dp),
+            .padding(horizontal = 24.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center
     ) { content() }
 }
@@ -160,9 +162,9 @@ fun PinGate(title: String, onSuccess: (recovered: Boolean) -> Unit) {
     }
     val onDelete: () -> Unit = { input = input.dropLast(1) }
 
-    Box(Modifier.fillMaxSize().digitKeys(onDigit, onDelete), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).digitKeys(onDigit, onDelete), contentAlignment = Alignment.TopCenter) {
         GlassPanel(Modifier.width(380.dp)) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(7.dp)) {
                 LockGlyph()
                 if (blocked > 0) {
                     Text("تم إيقاف الإدخال مؤقتًا", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
@@ -227,16 +229,16 @@ fun PinSetup(askPin: Boolean, askRecovery: Boolean, onDone: () -> Unit, onCancel
     }
     val onDelete: () -> Unit = { input = input.dropLast(1) }
 
-    Box(Modifier.fillMaxSize().digitKeys(onDigit, onDelete), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).digitKeys(onDigit, onDelete), contentAlignment = Alignment.TopCenter) {
         GlassPanel(Modifier.width(400.dp)) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(7.dp)) {
                 LockGlyph()
                 val title = when (step) {
                     0 -> "اختر رقمًا سريًا من 4 أرقام"
                     1 -> "أعد إدخال الرقم السري للتأكيد"
                     else -> "اختر رمز الاسترداد"
                 }
-                Text(title, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+                Text(title, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                 Text(
                     when (step) {
                         2 -> "من 4 إلى 10 أرقام · احفظه في مكان آمن · ${input.length} / 10"
@@ -263,7 +265,7 @@ fun PinSetup(askPin: Boolean, askRecovery: Boolean, onDone: () -> Unit, onCancel
 
 @Composable
 private fun LockGlyph() {
-    androidx.compose.foundation.Canvas(Modifier.size(30.dp)) {
+    androidx.compose.foundation.Canvas(Modifier.size(22.dp)) {
         val s = size.width
         val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = s * 0.07f)
         drawRoundRect(

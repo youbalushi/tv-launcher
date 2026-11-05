@@ -17,7 +17,11 @@ import kotlin.math.tan
 data class Method(val id: Int, val name: String, val fajr: Double, val ishaAngle: Double?, val ishaMinutes: Int?)
 
 object Methods {
+    /** Custom method for Oman (Ministry of Awqaf). Angles are calibrated against the ministry's published times. */
+    const val OMAN = 99
+
     val all = listOf(
+        Method(OMAN, "المعادلة العمانية", 18.0, 18.0, null),
         Method(3, "رابطة العالم الإسلامي", 18.0, 17.0, null),
         Method(4, "أم القرى", 18.5, null, 90),
         Method(8, "منطقة الخليج", 19.5, null, 90),
