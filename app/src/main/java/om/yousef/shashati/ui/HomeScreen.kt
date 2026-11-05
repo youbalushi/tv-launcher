@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -98,6 +99,7 @@ fun HomeScreen(
     }
     val (next, prev, today) = prayer
 
+    // Everything is sized to fit one TV screen (about 960 × 540 dp) without scrolling.
     Box(Modifier.fillMaxSize()) {
         AppBackground()
 
@@ -105,92 +107,109 @@ fun HomeScreen(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(start = 48.dp, end = 48.dp, top = 24.dp, bottom = 40.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+                .padding(start = 44.dp, end = 44.dp, top = 18.dp, bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Hero: clock, dates, dhikr and next prayer
+            // Hero: clock, dates and dhikr on one side; settings + next prayer on the other
             Row(
-                Modifier.fillMaxWidth().height(205.dp),
+                Modifier.fillMaxWidth().height(150.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(Dates.greeting(now.toLocalTime()), fontSize = 15.sp, color = C.dim)
-                    Text(Dates.time12(now.toLocalTime()), fontSize = 84.sp, fontWeight = FontWeight.Light, lineHeight = 88.sp)
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(Dates.greeting(now.toLocalTime()), fontSize = 13.sp, color = C.dim)
+                    Text(Dates.time12(now.toLocalTime()), fontSize = 64.sp, fontWeight = FontWeight.Light, lineHeight = 68.sp)
                     Text(
                         Dates.gregorian(now.toLocalDate()) + " · " + Dates.hijri(now.toLocalDate()),
-                        fontSize = 16.sp, color = Color(0xD1FFFFFF)
+                        fontSize = 14.sp, color = Color(0xD1FFFFFF)
                     )
-                    Text(Dates.dhikr(now.toLocalDate()), fontSize = 14.sp, color = C.faint)
+                    Text(Dates.dhikr(now.toLocalDate()), fontSize = 12.sp, color = C.faint)
                 }
-                if (Prefs.showNextCard) {
-                    val total = Duration.between(prev.time, next.time).toMinutes().coerceAtLeast(1)
-                    val left = Duration.between(now, next.time).toMinutes() + 1
-                    val progress = (1f - left.toFloat() / total).coerceIn(0f, 1f)
-                    Column(
-                        Modifier
-                            .width(260.dp)
-                            .background(Color(0x17FFFFFF), RoundedCornerShape(18.dp))
-                            .padding(horizontal = 20.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(7.dp)
+                Column(
+                    Modifier.fillMaxHeight(),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Focusable(
+                        modifier = Modifier.size(32.dp),
+                        shape = CircleShape,
+                        background = Color(0x1AFFFFFF),
+                        scaleOnFocus = 1.12f,
+                        onClick = { onOpenSettings(0) }
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(6.dp).background(C.gold, CircleShape))
-                            Spacer(Modifier.width(6.dp))
-                            Text("الصلاة القادمة", fontSize = 13.sp, color = C.dim)
+                        GearGlyph(Modifier.align(Alignment.Center).size(18.dp))
+                    }
+                    if (Prefs.showNextCard) {
+                        val total = Duration.between(prev.time, next.time).toMinutes().coerceAtLeast(1)
+                        val left = Duration.between(now, next.time).toMinutes() + 1
+                        val progress = (1f - left.toFloat() / total).coerceIn(0f, 1f)
+                        Column(
+                            Modifier
+                                .width(230.dp)
+                                .background(Color(0x17FFFFFF), RoundedCornerShape(16.dp))
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(6.dp).background(C.gold, CircleShape))
+                                Spacer(Modifier.width(6.dp))
+                                Text("الصلاة القادمة", fontSize = 11.sp, color = C.dim)
+                            }
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                                Text(PRAYER_NAMES[next.index], fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+                                Text(Dates.time12(next.time.toLocalTime()), fontSize = 18.sp, fontWeight = FontWeight.Light)
+                            }
+                            Box(Modifier.fillMaxWidth().height(3.dp).background(Color(0x24FFFFFF), RoundedCornerShape(50))) {
+                                Box(Modifier.fillMaxWidth(progress).height(3.dp).background(C.gold, RoundedCornerShape(50)))
+                            }
+                            Text(remainingText(left), fontSize = 12.sp, color = C.gold, fontWeight = FontWeight.Medium)
                         }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                            Text(PRAYER_NAMES[next.index], fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
-                            Text(Dates.time12(next.time.toLocalTime()), fontSize = 24.sp, fontWeight = FontWeight.Light)
-                        }
-                        Box(Modifier.fillMaxWidth().height(4.dp).background(Color(0x24FFFFFF), RoundedCornerShape(50))) {
-                            Box(Modifier.fillMaxWidth(progress).height(4.dp).background(C.gold, RoundedCornerShape(50)))
-                        }
-                        Text(remainingText(left), fontSize = 14.sp, color = C.gold, fontWeight = FontWeight.Medium)
                     }
                 }
             }
 
             // Favorites
-            SectionTitle("المفضلة")
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(20.dp),
-                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 6.dp)
-            ) {
-                itemsIndexed(favorites, key = { _, it -> it }) { i, fav ->
-                    val requester = if (i == 0) firstFocus else null
-                    if (fav == AppsRepository.CHANNELS) {
-                        Focusable(
-                            modifier = Modifier.size(170.dp, 96.dp),
-                            focusRequester = requester,
-                            background = Color(0xFF1B3358),
-                            onClick = onOpenChannels
-                        ) {
-                            Box(
-                                Modifier.fillMaxSize().background(
-                                    Brush.linearGradient(listOf(Color(0xFF1F3A63), Color(0xFF0D1A30)))
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                SectionTitle("المفضلة")
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(vertical = 6.dp, horizontal = 6.dp)
+                ) {
+                    itemsIndexed(favorites, key = { _, it -> it }) { i, fav ->
+                        val requester = if (i == 0) firstFocus else null
+                        if (fav == AppsRepository.CHANNELS) {
+                            Focusable(
+                                modifier = Modifier.size(148.dp, 83.dp),
+                                focusRequester = requester,
+                                background = Color(0xFF1B3358),
+                                onClick = onOpenChannels
+                            ) {
+                                Box(
+                                    Modifier.fillMaxSize().background(
+                                        Brush.linearGradient(listOf(Color(0xFF1F3A63), Color(0xFF0D1A30)))
+                                    )
                                 )
-                            )
-                            TvGlyph(Modifier.align(Alignment.TopStart).padding(12.dp).size(24.dp))
-                            Text(
-                                "القنوات", fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)
-                            )
+                                TvGlyph(Modifier.align(Alignment.TopStart).padding(10.dp).size(20.dp))
+                                Text(
+                                    "القنوات", fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.align(Alignment.BottomStart).padding(10.dp)
+                                )
+                            }
+                        } else {
+                            val tile = tiles.firstOrNull { it.app.packageName == fav }
+                            if (tile != null) AppCard(tile, requester, 148, 83) { onLaunchApp(tile.app.packageName) }
                         }
-                    } else {
-                        val tile = tiles.firstOrNull { it.app.packageName == fav }
-                        if (tile != null) AppCard(tile, requester) { onLaunchApp(tile.app.packageName) }
                     }
-                }
-                item(key = "add") {
-                    Focusable(
-                        modifier = Modifier.size(170.dp, 96.dp),
-                        background = Color(0x0DFFFFFF),
-                        onClick = { onOpenSettings(1) }
-                    ) {
-                        Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("+", fontSize = 26.sp, fontWeight = FontWeight.Light)
-                            Text("إضافة تطبيق", fontSize = 13.sp, color = C.dim)
+                    item(key = "add") {
+                        Focusable(
+                            modifier = Modifier.size(148.dp, 83.dp),
+                            background = Color(0x0DFFFFFF),
+                            onClick = { onOpenSettings(1) }
+                        ) {
+                            Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("+", fontSize = 22.sp, fontWeight = FontWeight.Light)
+                                Text("إضافة تطبيق", fontSize = 11.sp, color = C.dim)
+                            }
                         }
                     }
                 }
@@ -198,49 +217,41 @@ fun HomeScreen(
 
             // Prayer times bar
             if (Prefs.showPrayerBar) {
-                SectionTitle("أوقات الصلاة · ${Locations.current().name}")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    for (i in 0 until 5) {
-                        val isNext = next.index == i && next.time.toLocalDate() == now.toLocalDate()
-                        Row(
-                            Modifier
-                                .weight(1f)
-                                .background(if (isNext) C.goldSoft else Color(0x12FFFFFF), RoundedCornerShape(12.dp))
-                                .then(if (isNext) Modifier.padding(0.dp) else Modifier)
-                                .padding(horizontal = 15.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(PRAYER_NAMES[i], fontSize = 15.sp, fontWeight = if (isNext) FontWeight.SemiBold else FontWeight.Normal)
-                            Text(
-                                Dates.time12(today[i]), fontSize = 17.sp,
-                                fontWeight = if (isNext) FontWeight.SemiBold else FontWeight.Light,
-                                color = if (isNext) C.gold else Color.White
-                            )
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    SectionTitle("أوقات الصلاة · ${Locations.current().name}")
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        for (i in 0 until 5) {
+                            val isNext = next.index == i && next.time.toLocalDate() == now.toLocalDate()
+                            Row(
+                                Modifier
+                                    .weight(1f)
+                                    .background(if (isNext) C.goldSoft else Color(0x12FFFFFF), RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(PRAYER_NAMES[i], fontSize = 13.sp, fontWeight = if (isNext) FontWeight.SemiBold else FontWeight.Normal)
+                                Text(
+                                    Dates.time12(today[i]), fontSize = 15.sp,
+                                    fontWeight = if (isNext) FontWeight.SemiBold else FontWeight.Light,
+                                    color = if (isNext) C.gold else Color.White
+                                )
+                            }
                         }
                     }
                 }
             }
 
             // All apps
-            SectionTitle("جميع التطبيقات")
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 6.dp)
-            ) {
-                items(tiles, key = { "all-" + it.app.packageName }) { tile ->
-                    AppCard(tile, null, width = 150, height = 84) { onLaunchApp(tile.app.packageName) }
-                }
-            }
-
-            // Settings entry at the end of the page
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Focusable(
-                    modifier = Modifier.height(44.dp),
-                    shape = RoundedCornerShape(50),
-                    onClick = { onOpenSettings(0) }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                SectionTitle("جميع التطبيقات")
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    contentPadding = PaddingValues(vertical = 6.dp, horizontal = 6.dp)
                 ) {
-                    Text("الإعدادات", modifier = Modifier.align(Alignment.Center).padding(horizontal = 22.dp), fontSize = 14.sp)
+                    items(tiles, key = { "all-" + it.app.packageName }) { tile ->
+                        AppCard(tile, null, width = 120, height = 68) { onLaunchApp(tile.app.packageName) }
+                    }
                 }
             }
         }
@@ -283,5 +294,22 @@ private fun TvGlyph(modifier: Modifier) {
         drawLine(Color.White, Offset(s * 0.36f, s * 0.08f), Offset(s * 0.5f, s * 0.22f), s * 0.07f, StrokeCap.Round)
         drawLine(Color.White, Offset(s * 0.64f, s * 0.08f), Offset(s * 0.5f, s * 0.22f), s * 0.07f, StrokeCap.Round)
         drawLine(Color.White, Offset(s * 0.32f, s * 0.9f), Offset(s * 0.68f, s * 0.9f), s * 0.07f, StrokeCap.Round)
+    }
+}
+
+@Composable
+private fun GearGlyph(modifier: Modifier) {
+    Canvas(modifier) {
+        val s = size.width
+        val c = Offset(s / 2, s / 2)
+        val stroke = Stroke(width = s * 0.1f, cap = StrokeCap.Round)
+        drawCircle(Color.White, radius = s * 0.16f, center = c, style = stroke)
+        drawCircle(Color.White, radius = s * 0.32f, center = c, style = stroke)
+        for (k in 0 until 8) {
+            val a = Math.toRadians(k * 45.0)
+            val inner = Offset(c.x + (s * 0.32f * Math.cos(a)).toFloat(), c.y + (s * 0.32f * Math.sin(a)).toFloat())
+            val outer = Offset(c.x + (s * 0.46f * Math.cos(a)).toFloat(), c.y + (s * 0.46f * Math.sin(a)).toFloat())
+            drawLine(Color.White, inner, outer, s * 0.12f, StrokeCap.Round)
+        }
     }
 }
