@@ -114,7 +114,7 @@ fun HomeScreen(
         ) {
             // Hero: clock, dates and dhikr on one side; settings + next prayer on the other
             Row(
-                Modifier.fillMaxWidth().height(IntrinsicSize.Min).heightIn(min = 140.dp),
+                Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
@@ -125,12 +125,11 @@ fun HomeScreen(
                         Dates.gregorian(now.toLocalDate()) + " · " + Dates.hijri(now.toLocalDate()),
                         fontSize = 14.sp, color = Color(0xD1FFFFFF)
                     )
-                    Text(Dates.dhikr(now.toLocalDate()), fontSize = 12.sp, color = C.faint)
+                    Text(Dates.dhikr(now.toLocalDate()), fontSize = 13.sp, lineHeight = 22.sp, color = C.faint, modifier = Modifier.padding(top = 2.dp))
                 }
                 Column(
-                    Modifier.fillMaxHeight(),
                     horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.SpaceBetween
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Focusable(
                         modifier = Modifier.size(32.dp),
