@@ -34,7 +34,8 @@ object PrayerRepository {
 
     /** Raw times without offsets: online cache if available for this place/method, else calculated. */
     private fun baseTimes(date: LocalDate): List<LocalTime> {
-        cachedDay(date)?.let { return it }
+        // The Omani method is computed on the device exactly like the ministry's calendar.
+        if (Prefs.method != Methods.OMAN) cachedDay(date)?.let { return it }
         val w = Locations.current()
         return PrayerCalc.compute(date, w.lat, w.lng, TZ, Methods.byId(Prefs.method))
     }
@@ -77,6 +78,7 @@ object PrayerRepository {
     suspend fun refreshIfNeeded(force: Boolean = false): Boolean = withContext(Dispatchers.IO) {
         val today = LocalDate.now().format(dayKey)
         val sameKey = runCatching { JSONObject(Prefs.prayerCache ?: "{}").optString("key") == cacheKey() }.getOrDefault(false)
+        if (Prefs.method == Methods.OMAN) return@withContext true
         if (!force && Prefs.prayerFetchedDay == today && sameKey) return@withContext true
         runCatching {
             val w = Locations.current()

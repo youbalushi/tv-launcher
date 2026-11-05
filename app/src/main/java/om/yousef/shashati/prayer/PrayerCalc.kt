@@ -14,14 +14,26 @@ import kotlin.math.sin
 import kotlin.math.tan
 
 /** Calculation method: Fajr angle, and Isha as an angle or a fixed number of minutes after Maghrib. */
-data class Method(val id: Int, val name: String, val fajr: Double, val ishaAngle: Double?, val ishaMinutes: Int?)
+data class Method(
+    val id: Int,
+    val name: String,
+    val fajr: Double,
+    val ishaAngle: Double?,
+    val ishaMinutes: Int?,
+    /** Fixed precaution minutes added to Fajr, Dhuhr, Asr, Maghrib, Isha. */
+    val tamkin: List<Int> = listOf(0, 0, 0, 0, 0),
+    /** Round up to the next minute (as the Omani calendar does) instead of to the nearest. */
+    val roundUp: Boolean = false,
+)
 
 object Methods {
     /** Custom method for Oman (Ministry of Awqaf). Angles are calibrated against the ministry's published times. */
     const val OMAN = 99
 
     val all = listOf(
-        Method(OMAN, "المعادلة العمانية", 18.0, 18.0, null),
+        // Fitted to the Ministry of Awqaf app (Muscat, 5 Nov 2026): 18° / 18°,
+        // +1 min Fajr and Isha, +6 min Dhuhr, Asr and Maghrib, rounded up.
+        Method(OMAN, "المعادلة العمانية", 18.0, 18.0, null, listOf(1, 6, 6, 6, 1), roundUp = true),
         Method(3, "رابطة العالم الإسلامي", 18.0, 17.0, null),
         Method(4, "أم القرى", 18.5, null, 90),
         Method(8, "منطقة الخليج", 19.5, null, 90),
@@ -98,8 +110,10 @@ object PrayerCalc {
         else sunAngleTime(method.ishaAngle ?: 17.0, 18.0 / 24, false)
 
         val adjust = tz - lng / 15.0
-        return listOf(fajr, dhuhr, asr, maghrib, isha).map { h ->
-            val total = (fixHour(h + adjust) * 60).roundToInt() % (24 * 60)
+        return listOf(fajr, dhuhr, asr, maghrib, isha).mapIndexed { i, h ->
+            val exact = fixHour(h + adjust) * 60 + method.tamkin[i]
+            val minutes = if (method.roundUp) kotlin.math.ceil(exact - 1e-6).toInt() else exact.roundToInt()
+            val total = ((minutes % (24 * 60)) + 24 * 60) % (24 * 60)
             LocalTime.of(total / 60, total % 60)
         }
     }

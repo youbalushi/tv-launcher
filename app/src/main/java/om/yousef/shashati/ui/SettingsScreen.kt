@@ -352,7 +352,8 @@ private fun PrayerSection(onChanged: () -> Unit) {
             Pill("تحديث الأوقات الآن", selected = false, fontSize = 13) { refresh() }
             Text(
                 status.ifEmpty {
-                    if (PrayerRepository.isOnlineSource()) "المصدر: الإنترنت (يُحدَّث يوميًا)" else "المصدر: حساب على الجهاز"
+                    if (method == Methods.OMAN) "المعادلة العمانية: تُحسب على الجهاز بطريقة تقويم وزارة الأوقاف"
+                    else if (PrayerRepository.isOnlineSource()) "المصدر: الإنترنت (يُحدَّث يوميًا)" else "المصدر: حساب على الجهاز"
                 },
                 fontSize = 12.sp, color = C.dim
             )
