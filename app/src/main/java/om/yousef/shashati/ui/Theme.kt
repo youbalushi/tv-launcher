@@ -31,7 +31,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -65,7 +67,10 @@ object C {
 
 @Composable
 fun AppTheme(content: @Composable () -> Unit) {
+    // Ignore the TV's "font size" setting so the layout always fits the screen the same way.
+    val density = LocalDensity.current
     CompositionLocalProvider(
+        LocalDensity provides Density(density.density, fontScale = 1f),
         LocalLayoutDirection provides LayoutDirection.Rtl,
         LocalTextStyle provides TextStyle(fontFamily = Plex, color = Color.White, fontSize = 14.sp),
     ) { content() }

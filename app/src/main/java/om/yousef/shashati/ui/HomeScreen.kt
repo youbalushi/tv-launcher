@@ -5,6 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -112,13 +114,13 @@ fun HomeScreen(
         ) {
             // Hero: clock, dates and dhikr on one side; settings + next prayer on the other
             Row(
-                Modifier.fillMaxWidth().height(150.dp),
+                Modifier.fillMaxWidth().height(IntrinsicSize.Min).heightIn(min = 140.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
                     Text(Dates.greeting(now.toLocalTime()), fontSize = 13.sp, color = C.dim)
-                    Text(Dates.time12(now.toLocalTime()), fontSize = 64.sp, fontWeight = FontWeight.Light, lineHeight = 68.sp)
+                    Text(Dates.time12(now.toLocalTime()), fontSize = 60.sp, fontWeight = FontWeight.Light, lineHeight = 64.sp)
                     Text(
                         Dates.gregorian(now.toLocalDate()) + " · " + Dates.hijri(now.toLocalDate()),
                         fontSize = 14.sp, color = Color(0xD1FFFFFF)
