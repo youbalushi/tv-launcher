@@ -16,9 +16,13 @@ jobs:
           import json
           d=json.load(open('r.json'))['reciters']
           want=['المعيقلي','البلوشي','الدخين','العفاسي','الحصري','السديس','الغامدي','الدوسري','عبدالباسط','الشريم']
+          out=[]
           for r in d:
               if any(w in r['name'] for w in want):
                   for m in r['moshaf']:
-                      if '18' in m['surah_list'].split(','):
-                          print(f"::notice::{r['id']}|{r['name']}|{m['name']}|{m['server']}018.mp3")
+                      if '18' in m['surah_list'].split(',') and 'حفص' in m['name']:
+                          out.append(f"{r['id']}|{r['name']}|{m['name']}|{m['server']}018.mp3")
+          for i in range(0,len(out),8):
+              print("::notice::"+" ;; ".join(out[i:i+8]))
+          print("::notice::total "+str(len(d)))
           PY
