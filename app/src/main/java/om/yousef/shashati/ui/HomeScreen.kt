@@ -108,8 +108,7 @@ fun HomeScreen(
     val friday = now.dayOfWeek == java.time.DayOfWeek.FRIDAY
     val special: String? = when {
         friday && hour in 7..17 -> "kahf"
-        !friday && hour in 6..9 -> "morning"
-        !friday && hour in 18..19 -> "evening"
+        // Morning/evening adhkar are paused until a later update.
         else -> null
     }
 
