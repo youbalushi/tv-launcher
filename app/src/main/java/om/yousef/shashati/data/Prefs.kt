@@ -82,6 +82,17 @@ object Prefs {
     var saverPrayers by bool("saverPrayers", true)
     var saverMinutes by int("saverMinutes", 10)
 
+    // Kids mode and app lock
+    var kidsMode by bool("kidsMode", false)
+    var kidsAppsRaw by str("kidsApps")
+    var lockedAppsRaw by str("lockedApps")
+    var unlockedPkg by str("unlockedPkg")
+
+    fun kidsApps(): Set<String> = kidsAppsRaw?.split("|")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+    fun lockedApps(): Set<String> = lockedAppsRaw?.split("|")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+    fun setKidsApps(v: Set<String>) { kidsAppsRaw = v.joinToString("|") }
+    fun setLockedApps(v: Set<String>) { lockedAppsRaw = v.joinToString("|") }
+
     // Security
     var askPin by bool("askPin", true)
     var pinHash by str("pinHash")

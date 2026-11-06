@@ -5,13 +5,46 @@ import android.content.Intent
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import om.yousef.shashati.MainActivity
+import om.yousef.shashati.data.Prefs
 
 /**
- * Catches the remote's Home button and opens شاشتي instead of the TV maker's home screen.
- * Xiaomi's Android TV ignores the normal "default home app" setting, so this is the reliable way.
+ * 1. Catches the remote's Home button and opens شاشتي (Xiaomi ignores the default-home setting).
+ * 2. Kids mode: any app not allowed for children is closed and the kids screen comes back.
+ * 3. App lock: opening a locked app asks for the PIN first.
  */
 class HomeKeyService : AccessibilityService() {
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
+
+    private fun isNeutral(pkg: String) =
+        pkg == packageName ||
+            pkg == "android" ||
+            pkg.startsWith("com.android.systemui") ||
+            pkg.contains("inputmethod") ||
+            pkg.contains("keyboard") ||
+            pkg == "com.google.android.tvrecommendations"
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+        val pkg = event.packageName?.toString() ?: return
+        if (isNeutral(pkg)) return
+
+        if (Prefs.kidsMode) {
+            if (pkg !in Prefs.kidsApps()) openSelf(MainActivity.EXTRA_KIDS, "1")
+            return
+        }
+
+        val session = Prefs.unlockedPkg
+        if (session != null && session != pkg) Prefs.unlockedPkg = null
+        if (pkg in Prefs.lockedApps() && Prefs.unlockedPkg != pkg) {
+            openSelf(MainActivity.EXTRA_LOCK, pkg)
+        }
+    }
+
+    private fun openSelf(extra: String, value: String) {
+        val intent = Intent(this, MainActivity::class.java)
+            .putExtra(extra, value)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        runCatching { startActivity(intent) }
+    }
 
     override fun onInterrupt() {}
 

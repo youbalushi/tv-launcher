@@ -62,11 +62,12 @@ private val SECTIONS = listOf(
     "موقع وأوقات الصلاة",
     "الأذان والإقامة",
     "شاشة التوقف",
+    "الأطفال وقفل التطبيقات",
     "الواجهة الأصلية والرقم السري",
 )
 
 @Composable
-fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Unit, onPreview: () -> Unit = {}) {
+fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Unit, onPreview: () -> Unit = {}, onStartKids: () -> Unit = {}) {
     var unlocked by remember { mutableStateOf(Prefs.hasPin && !Prefs.askPin) }
     var section by remember { mutableIntStateOf(initialSection) }
     var sub by remember { mutableStateOf<String?>(null) } // overlays inside a section
@@ -90,7 +91,7 @@ fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Uni
                 !Prefs.hasPin -> PinSetup(askPin = true, askRecovery = true, onDone = { unlocked = true })
                 !unlocked -> PinGate("الإعدادات محمية") { recovered ->
                     unlocked = true
-                    if (recovered) { section = 5; sub = "changePin" }
+                    if (recovered) { section = 6; sub = "changePin" }
                 }
                 else -> Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     Column(Modifier.width(220.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -121,6 +122,7 @@ fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Uni
                             2 -> PrayerSection(onChanged)
                             3 -> AdhanSection()
                             4 -> SaverSection(onPreview)
+                            5 -> KidsLockSection(onStartKids)
                             else -> SecuritySection(sub, { sub = it }, onChanged)
                         }
                     }
@@ -526,3 +528,48 @@ fun applySaverTimeout(context: android.content.Context, minutes: Int): Boolean =
     if (!Settings.System.canWrite(context)) return false
     Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, minutes * 60_000)
 }.getOrDefault(false)
+
+@Composable
+private fun KidsLockSection(onStartKids: () -> Unit) {
+    val context = LocalContext.current
+    val apps = remember { AppsRepository.installed(context) }
+    var kids by remember { mutableStateOf(Prefs.kidsApps()) }
+    var locked by remember { mutableStateOf(Prefs.lockedApps()) }
+
+    Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            SectionHeader("الأطفال وقفل التطبيقات")
+            Pill("تشغيل عالم الأطفال الآن", selected = true, fontSize = 13, hPad = 16.dp) {
+                Prefs.kidsMode = true
+                onStartKids()
+            }
+        }
+        Text(
+            "«للأطفال»: يظهر في عالم الأطفال، وأي تطبيق غيره يُغلق تلقائيًا.  «قفل»: يُطلب الرقم السري لفتحه.",
+            fontSize = 12.sp, color = C.dim
+        )
+        Text(
+            "ألعاب مجانية تعمل بالريموت تناسب الأطفال: Crossy Road · Beach Buggy Racing · PAC-MAN · Orbia · BADLAND (ثبّتها من المتجر ثم اسمح بها هنا).",
+            fontSize = 11.sp, color = C.faint
+        )
+        apps.forEach { app ->
+            val forKids = app.packageName in kids
+            val isLocked = app.packageName in locked
+            Row(
+                Modifier.fillMaxWidth().background(Color(0x0FFFFFFF), RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(app.label, fontSize = 14.sp, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Pill(if (forKids) "للأطفال ✓" else "للأطفال", selected = forKids, fontSize = 12) {
+                    kids = if (forKids) kids - app.packageName else kids + app.packageName
+                    Prefs.setKidsApps(kids)
+                }
+                Pill(if (isLocked) "مقفل 🔒" else "قفل", selected = isLocked, fontSize = 12) {
+                    locked = if (isLocked) locked - app.packageName else locked + app.packageName
+                    Prefs.setLockedApps(locked)
+                }
+            }
+        }
+    }
+}

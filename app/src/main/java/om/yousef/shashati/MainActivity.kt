@@ -22,6 +22,10 @@ import om.yousef.shashati.ui.ChannelsScreen
 import om.yousef.shashati.ui.HomeScreen
 import om.yousef.shashati.ui.ScreensaverContent
 import om.yousef.shashati.ui.SettingsScreen
+import om.yousef.shashati.ui.KidsScreen
+import om.yousef.shashati.ui.PinGate
+import om.yousef.shashati.ui.AppBackground
+import om.yousef.shashati.data.Prefs
 import androidx.compose.foundation.focusable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -35,15 +39,17 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 
 class MainActivity : ComponentActivity() {
-    private enum class Screen { Home, Channels, Settings, Kahf, Adhkar, SaverPreview }
+    private enum class Screen { Home, Channels, Settings, Kahf, Adhkar, SaverPreview, Kids, Lock }
 
     private var screen by mutableStateOf(Screen.Home)
     private var settingsSection by mutableIntStateOf(0)
     private var version by mutableIntStateOf(0)
     private var adhkarMorning by mutableStateOf(true)
+    private var lockPkg by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleIntent(intent)
         setContent {
             AppTheme {
                 when (screen) {
@@ -72,8 +78,28 @@ class MainActivity : ComponentActivity() {
                         initialSection = settingsSection,
                         onBack = { screen = Screen.Home },
                         onChanged = { version++ },
-                        onPreview = { screen = Screen.SaverPreview }
+                        onPreview = { screen = Screen.SaverPreview },
+                        onStartKids = { screen = Screen.Kids }
                     )
+                    Screen.Kids -> KidsScreen(
+                        onPlayChannels = { list -> startActivity(PlayerActivity.intent(this, list, 0)) },
+                        onExit = { screen = Screen.Home }
+                    )
+                    Screen.Lock -> {
+                        BackHandler { lockPkg = null; screen = Screen.Home }
+                        Box(Modifier.fillMaxSize()) {
+                            AppBackground()
+                            PinGate("هذا التطبيق مقفل") {
+                                val pkg = lockPkg
+                                lockPkg = null
+                                screen = Screen.Home
+                                if (pkg != null) {
+                                    Prefs.unlockedPkg = pkg
+                                    AppsRepository.launch(this@MainActivity, pkg)
+                                }
+                            }
+                        }
+                    }
                     Screen.SaverPreview -> {
                         BackHandler { settingsSection = 4; screen = Screen.Settings }
                         val fr = remember { FocusRequester() }
@@ -95,12 +121,29 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        // Pressing Home while inside a sub-screen returns to the main screen.
-        if (intent.hasCategory(Intent.CATEGORY_HOME)) screen = Screen.Home
+        handleIntent(intent)
+    }
+
+    /** Home button, kids-mode return and app-lock requests all arrive here. */
+    private fun handleIntent(intent: Intent?) {
+        when {
+            Prefs.kidsMode -> screen = Screen.Kids
+            intent?.getStringExtra(EXTRA_LOCK) != null -> {
+                lockPkg = intent.getStringExtra(EXTRA_LOCK)
+                screen = Screen.Lock
+            }
+            intent?.hasCategory(Intent.CATEGORY_HOME) == true -> screen = Screen.Home
+        }
+    }
+
+    companion object {
+        const val EXTRA_KIDS = "kids"
+        const val EXTRA_LOCK = "lockPkg"
     }
 
     override fun onResume() {
         super.onResume()
+        if (Prefs.kidsMode && screen != Screen.Kids) screen = Screen.Kids
         AlarmScheduler.scheduleNext(this)
         lifecycleScope.launch {
             val prayersOk = PrayerRepository.refreshIfNeeded()
