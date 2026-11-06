@@ -1,0 +1,24 @@
+name: Find reciters
+
+on:
+  push:
+    paths: ['.github/workflows/reciters.yml']
+  workflow_dispatch:
+
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query mp3quran
+        run: |
+          curl -sL "https://www.mp3quran.net/api/v3/reciters?language=ar" -o r.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('r.json'))['reciters']
+          want=['المعيقلي','البلوشي','الدخين','العفاسي','الحصري','السديس','الغامدي','الدوسري','عبدالباسط','الشريم']
+          for r in d:
+              if any(w in r['name'] for w in want):
+                  for m in r['moshaf']:
+                      if '18' in m['surah_list'].split(','):
+                          print(f"::notice::{r['id']}|{r['name']}|{m['name']}|{m['server']}018.mp3")
+          PY
