@@ -74,6 +74,8 @@ fun HomeScreen(
     onOpenChannels: () -> Unit,
     onOpenSettings: (section: Int) -> Unit,
     onLaunchApp: (String) -> Unit,
+    onOpenKahf: () -> Unit = {},
+    onOpenAdhkar: (morning: Boolean) -> Unit = {},
 ) {
     val context = LocalContext.current
     var now by remember { mutableStateOf(LocalDateTime.now()) }
@@ -100,6 +102,16 @@ fun HomeScreen(
         Triple(next, prev, PrayerRepository.timesFor(now.toLocalDate()))
     }
     val (next, prev, today) = prayer
+
+    // Friday 7:00–18:00: Surah Al-Kahf. Saturday–Thursday: morning adhkar 6–10, evening adhkar 18–20.
+    val hour = now.hour
+    val friday = now.dayOfWeek == java.time.DayOfWeek.FRIDAY
+    val special: String? = when {
+        friday && hour in 7..17 -> "kahf"
+        !friday && hour in 6..9 -> "morning"
+        !friday && hour in 18..19 -> "evening"
+        else -> null
+    }
 
     // Everything is sized to fit one TV screen (about 960 × 540 dp) without scrolling.
     Box(Modifier.fillMaxSize()) {
@@ -140,30 +152,57 @@ fun HomeScreen(
                     ) {
                         GearGlyph(Modifier.align(Alignment.Center).size(18.dp))
                     }
-                    if (Prefs.showNextCard) {
-                        val total = Duration.between(prev.time, next.time).toMinutes().coerceAtLeast(1)
-                        val left = Duration.between(now, next.time).toMinutes() + 1
-                        val progress = (1f - left.toFloat() / total).coerceIn(0f, 1f)
-                        Column(
-                            Modifier
-                                .width(230.dp)
-                                .background(Color(0x17FFFFFF), RoundedCornerShape(16.dp))
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                            verticalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(Modifier.size(6.dp).background(C.gold, CircleShape))
-                                Spacer(Modifier.width(6.dp))
-                                Text("الصلاة القادمة", fontSize = 11.sp, color = C.dim)
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
+                        if (Prefs.showNextCard) {
+                            val total = Duration.between(prev.time, next.time).toMinutes().coerceAtLeast(1)
+                            val left = Duration.between(now, next.time).toMinutes() + 1
+                            val progress = (1f - left.toFloat() / total).coerceIn(0f, 1f)
+                            Column(
+                                Modifier
+                                    .width(230.dp)
+                                    .background(Color(0x17FFFFFF), RoundedCornerShape(16.dp))
+                                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(Modifier.size(6.dp).background(C.gold, CircleShape))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("الصلاة القادمة", fontSize = 11.sp, color = C.dim)
+                                }
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                                    Text(PRAYER_NAMES[next.index], fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(Dates.time12(next.time.toLocalTime()), fontSize = 18.sp, fontWeight = FontWeight.Light)
+                                }
+                                Box(Modifier.fillMaxWidth().height(3.dp).background(Color(0x24FFFFFF), RoundedCornerShape(50))) {
+                                    Box(Modifier.fillMaxWidth(progress).height(3.dp).background(C.gold, RoundedCornerShape(50)))
+                                }
+                                Text(remainingText(left), fontSize = 12.sp, color = C.gold, fontWeight = FontWeight.Medium)
                             }
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                                Text(PRAYER_NAMES[next.index], fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
-                                Text(Dates.time12(next.time.toLocalTime()), fontSize = 18.sp, fontWeight = FontWeight.Light)
+                        }
+                        if (special != null) {
+                            Focusable(
+                                modifier = Modifier.height(44.dp),
+                                shape = RoundedCornerShape(50),
+                                background = C.goldSoft,
+                                scaleOnFocus = 1.08f,
+                                onClick = {
+                                    when (special) {
+                                        "kahf" -> onOpenKahf()
+                                        "morning" -> onOpenAdhkar(true)
+                                        else -> onOpenAdhkar(false)
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    when (special) {
+                                        "kahf" -> "▶ تشغيل سورة الكهف"
+                                        "morning" -> "▶ تشغيل أذكار الصباح"
+                                        else -> "▶ تشغيل أذكار المساء"
+                                    },
+                                    fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = C.gold,
+                                    modifier = Modifier.align(Alignment.Center).padding(horizontal = 18.dp)
+                                )
                             }
-                            Box(Modifier.fillMaxWidth().height(3.dp).background(Color(0x24FFFFFF), RoundedCornerShape(50))) {
-                                Box(Modifier.fillMaxWidth(progress).height(3.dp).background(C.gold, RoundedCornerShape(50)))
-                            }
-                            Text(remainingText(left), fontSize = 12.sp, color = C.gold, fontWeight = FontWeight.Medium)
                         }
                     }
                 }

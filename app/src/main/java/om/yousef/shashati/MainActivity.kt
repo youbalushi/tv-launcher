@@ -15,17 +15,20 @@ import om.yousef.shashati.data.AppsRepository
 import om.yousef.shashati.data.ChannelRepository
 import om.yousef.shashati.overlay.AlarmScheduler
 import om.yousef.shashati.prayer.PrayerRepository
+import om.yousef.shashati.ui.AdhkarScreen
 import om.yousef.shashati.ui.AppTheme
+import om.yousef.shashati.ui.KahfScreen
 import om.yousef.shashati.ui.ChannelsScreen
 import om.yousef.shashati.ui.HomeScreen
 import om.yousef.shashati.ui.SettingsScreen
 
 class MainActivity : ComponentActivity() {
-    private enum class Screen { Home, Channels, Settings }
+    private enum class Screen { Home, Channels, Settings, Kahf, Adhkar }
 
     private var screen by mutableStateOf(Screen.Home)
     private var settingsSection by mutableIntStateOf(0)
     private var version by mutableIntStateOf(0)
+    private var adhkarMorning by mutableStateOf(true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +41,9 @@ class MainActivity : ComponentActivity() {
                             version = version,
                             onOpenChannels = { screen = Screen.Channels },
                             onOpenSettings = { s -> settingsSection = s; screen = Screen.Settings },
-                            onLaunchApp = { pkg -> AppsRepository.launch(this, pkg) }
+                            onLaunchApp = { pkg -> AppsRepository.launch(this, pkg) },
+                            onOpenKahf = { screen = Screen.Kahf },
+                            onOpenAdhkar = { m -> adhkarMorning = m; screen = Screen.Adhkar }
                         )
                     }
                     Screen.Channels -> {
@@ -49,6 +54,8 @@ class MainActivity : ComponentActivity() {
                             onPlay = { list, i -> startActivity(PlayerActivity.intent(this, list, i)) }
                         )
                     }
+                    Screen.Kahf -> KahfScreen(onBack = { screen = Screen.Home })
+                    Screen.Adhkar -> AdhkarScreen(morning = adhkarMorning, onBack = { screen = Screen.Home })
                     Screen.Settings -> SettingsScreen(
                         initialSection = settingsSection,
                         onBack = { screen = Screen.Home },
