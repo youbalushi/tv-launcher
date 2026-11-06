@@ -3,4 +3,5 @@
     <string name="app_name">شاشتي</string>
     <string name="a11y_description">يجعل زر Home في الريموت يفتح واجهة شاشتي.</string>
     <string name="a11y_label">شاشتي – زر الرئيسية</string>
+    <string name="saver_label">شاشتي – شاشة التوقف الإسلامية</string>
 </resources>

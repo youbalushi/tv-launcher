@@ -75,6 +75,13 @@ object Prefs {
     var notifSeconds by int("notifSec", 10)
     var lastFiredKey by str("lastFired")
 
+    // Screensaver
+    var saverNight by bool("saverNight", true)
+    var saverHijri by bool("saverHijri", true)
+    var saverDhikr by bool("saverDhikr", true)
+    var saverPrayers by bool("saverPrayers", true)
+    var saverMinutes by int("saverMinutes", 10)
+
     // Security
     var askPin by bool("askPin", true)
     var pinHash by str("pinHash")

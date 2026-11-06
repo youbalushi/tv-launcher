@@ -20,10 +20,22 @@ import om.yousef.shashati.ui.AppTheme
 import om.yousef.shashati.ui.KahfScreen
 import om.yousef.shashati.ui.ChannelsScreen
 import om.yousef.shashati.ui.HomeScreen
+import om.yousef.shashati.ui.ScreensaverContent
 import om.yousef.shashati.ui.SettingsScreen
+import androidx.compose.foundation.focusable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 
 class MainActivity : ComponentActivity() {
-    private enum class Screen { Home, Channels, Settings, Kahf, Adhkar }
+    private enum class Screen { Home, Channels, Settings, Kahf, Adhkar, SaverPreview }
 
     private var screen by mutableStateOf(Screen.Home)
     private var settingsSection by mutableIntStateOf(0)
@@ -59,8 +71,23 @@ class MainActivity : ComponentActivity() {
                     Screen.Settings -> SettingsScreen(
                         initialSection = settingsSection,
                         onBack = { screen = Screen.Home },
-                        onChanged = { version++ }
+                        onChanged = { version++ },
+                        onPreview = { screen = Screen.SaverPreview }
                     )
+                    Screen.SaverPreview -> {
+                        BackHandler { settingsSection = 4; screen = Screen.Settings }
+                        val fr = remember { FocusRequester() }
+                        LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
+                        Box(
+                            Modifier.fillMaxSize()
+                                .focusRequester(fr)
+                                .focusable()
+                                .onPreviewKeyEvent { e ->
+                                    if (e.type == KeyEventType.KeyUp) { settingsSection = 4; screen = Screen.Settings }
+                                    true
+                                }
+                        ) { ScreensaverContent() }
+                    }
                 }
             }
         }

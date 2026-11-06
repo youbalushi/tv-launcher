@@ -61,11 +61,12 @@ private val SECTIONS = listOf(
     "بطاقات المفضلة",
     "موقع وأوقات الصلاة",
     "الأذان والإقامة",
+    "شاشة التوقف",
     "الواجهة الأصلية والرقم السري",
 )
 
 @Composable
-fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Unit) {
+fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Unit, onPreview: () -> Unit = {}) {
     var unlocked by remember { mutableStateOf(Prefs.hasPin && !Prefs.askPin) }
     var section by remember { mutableIntStateOf(initialSection) }
     var sub by remember { mutableStateOf<String?>(null) } // overlays inside a section
@@ -89,7 +90,7 @@ fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Uni
                 !Prefs.hasPin -> PinSetup(askPin = true, askRecovery = true, onDone = { unlocked = true })
                 !unlocked -> PinGate("الإعدادات محمية") { recovered ->
                     unlocked = true
-                    if (recovered) { section = 4; sub = "changePin" }
+                    if (recovered) { section = 5; sub = "changePin" }
                 }
                 else -> Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     Column(Modifier.width(220.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -119,6 +120,7 @@ fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Uni
                             1 -> FavoritesSection(onChanged)
                             2 -> PrayerSection(onChanged)
                             3 -> AdhanSection()
+                            4 -> SaverSection(onPreview)
                             else -> SecuritySection(sub, { sub = it }, onChanged)
                         }
                     }
@@ -479,3 +481,48 @@ private fun SecuritySection(sub: String?, setSub: (String?) -> Unit, onChanged: 
         if (message.isNotEmpty()) Text(message, fontSize = 13.sp, color = C.gold)
     }
 }
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SaverSection(onPreview: () -> Unit) {
+    val context = LocalContext.current
+    var night by remember { mutableStateOf(Prefs.saverNight) }
+    var hijri by remember { mutableStateOf(Prefs.saverHijri) }
+    var dhikr by remember { mutableStateOf(Prefs.saverDhikr) }
+    var prayers by remember { mutableStateOf(Prefs.saverPrayers) }
+    var minutes by remember { mutableIntStateOf(Prefs.saverMinutes) }
+    val canWrite = remember { Settings.System.canWrite(context) }
+    var note by remember { mutableStateOf("") }
+
+    Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SectionHeader("شاشة التوقف")
+        Text("تظهر بعد عدم استخدام التلفزيون لمدة", fontSize = 13.sp, color = C.dim)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(5, 10, 15, 30).forEach { m ->
+                Pill("$m دقيقة", selected = minutes == m, fontSize = 13) {
+                    minutes = m
+                    Prefs.saverMinutes = m
+                    note = if (applySaverTimeout(context, m)) "تم ضبط المدة ✓"
+                    else "لتطبيق المدة يلزم تشغيل ملف التثبيت مرة واحدة من اللابتوب"
+                }
+            }
+        }
+        if (note.isNotEmpty()) Text(note, fontSize = 12.sp, color = C.gold)
+        if (!canWrite) Text("صلاحية ضبط مدة الانتظار تُمنح من ملف التثبيت على اللابتوب.", fontSize = 11.sp, color = C.faint)
+        Text("الخلفية", fontSize = 13.sp, color = C.dim)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Pill("ليل", selected = night, fontSize = 13) { night = true; Prefs.saverNight = true }
+            Pill("غروب", selected = !night, fontSize = 13) { night = false; Prefs.saverNight = false }
+        }
+        ToggleRow("التاريخ الهجري", value = hijri) { hijri = !hijri; Prefs.saverHijri = hijri }
+        ToggleRow("الأذكار", value = dhikr) { dhikr = !dhikr; Prefs.saverDhikr = dhikr }
+        ToggleRow("أوقات الصلاة", value = prayers) { prayers = !prayers; Prefs.saverPrayers = prayers }
+        Pill("معاينة شاشة التوقف", selected = true, fontSize = 13, hPad = 18.dp) { onPreview() }
+    }
+}
+
+/** Sets how long the TV waits before starting the screensaver. Needs the WRITE_SETTINGS grant. */
+fun applySaverTimeout(context: android.content.Context, minutes: Int): Boolean = runCatching {
+    if (!Settings.System.canWrite(context)) return false
+    Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, minutes * 60_000)
+}.getOrDefault(false)
