@@ -14,6 +14,28 @@ import om.yousef.shashati.data.Prefs
  */
 class HomeKeyService : AccessibilityService() {
 
+    /** The TV maker's own home screens. Whenever one appears (after a restart, waking up, etc.) شاشتي replaces it. */
+    private val stockHomes = setOf(
+        "com.google.android.apps.tv.launcherx",
+        "com.google.android.tvlauncher",
+        "com.mitv.tvhome",
+        "com.mitv.tvhome.atv",
+    )
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        // The service starts right after the TV boots: open شاشتي straight away.
+        if (!Prefs.originalAllowed) openHome()
+    }
+
+    private fun openHome() {
+        val intent = Intent(this, MainActivity::class.java)
+            .setAction(Intent.ACTION_MAIN)
+            .addCategory(Intent.CATEGORY_HOME)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+        runCatching { startActivity(intent) }
+    }
+
     private fun isNeutral(pkg: String) =
         pkg == packageName ||
             pkg == "android" ||
@@ -26,6 +48,11 @@ class HomeKeyService : AccessibilityService() {
         if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val pkg = event.packageName?.toString() ?: return
         if (isNeutral(pkg)) return
+
+        if (pkg in stockHomes && !Prefs.originalAllowed) {
+            openHome()
+            return
+        }
 
         if (Prefs.kidsMode) {
             if (pkg !in Prefs.kidsApps()) openSelf(MainActivity.EXTRA_KIDS, "1")
@@ -51,11 +78,8 @@ class HomeKeyService : AccessibilityService() {
     override fun onKeyEvent(event: KeyEvent): Boolean {
         if (event.keyCode != KeyEvent.KEYCODE_HOME) return false
         if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) {
-            val intent = Intent(this, MainActivity::class.java)
-                .setAction(Intent.ACTION_MAIN)
-                .addCategory(Intent.CATEGORY_HOME)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-            runCatching { startActivity(intent) }
+            Prefs.originalAllowed = false
+            openHome()
         }
         return true
     }

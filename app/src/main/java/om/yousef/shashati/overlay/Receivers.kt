@@ -43,6 +43,17 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val app = context.applicationContext
         AlarmScheduler.scheduleNext(app)
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED && !Prefs.originalAllowed) {
+            // Open شاشتي after a restart (allowed because the app may draw over other apps).
+            runCatching {
+                app.startActivity(
+                    Intent(app, om.yousef.shashati.MainActivity::class.java)
+                        .setAction(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_HOME)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
+        }
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {

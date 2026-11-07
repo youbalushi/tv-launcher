@@ -143,6 +143,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        Prefs.originalAllowed = false
         if (Prefs.kidsMode && screen != Screen.Kids) screen = Screen.Kids
         AlarmScheduler.scheduleNext(this)
         lifecycleScope.launch {

@@ -88,6 +88,9 @@ object Prefs {
     var lockedAppsRaw by str("lockedApps")
     var unlockedPkg by str("unlockedPkg")
 
+    /** True only after the user chose "exit to the original home screen", until Home is pressed again. */
+    var originalAllowed by bool("originalAllowed", false)
+
     fun kidsApps(): Set<String> = kidsAppsRaw?.split("|")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
     fun lockedApps(): Set<String> = lockedAppsRaw?.split("|")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
     fun setKidsApps(v: Set<String>) { kidsAppsRaw = v.joinToString("|") }

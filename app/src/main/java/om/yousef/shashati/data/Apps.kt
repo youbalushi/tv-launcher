@@ -70,6 +70,7 @@ object AppsRepository {
             "com.mitv.tvhome",
             "com.mitv.tvhome.atv",
         )
+        Prefs.originalAllowed = true
         val target = homes.sortedBy { r ->
             val i = preferred.indexOf(r.activityInfo.packageName)
             if (i < 0) 99 else i
