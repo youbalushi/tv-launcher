@@ -142,14 +142,17 @@ fun HomeScreen(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Focusable(
-                        modifier = Modifier.size(32.dp),
-                        shape = CircleShape,
-                        background = Color(0x1AFFFFFF),
-                        scaleOnFocus = 1.12f,
-                        onClick = { onOpenSettings(0) }
-                    ) {
-                        GearGlyph(Modifier.align(Alignment.Center).size(18.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        NetworkIndicator()
+                        Focusable(
+                            modifier = Modifier.size(32.dp),
+                            shape = CircleShape,
+                            background = Color(0x1AFFFFFF),
+                            scaleOnFocus = 1.12f,
+                            onClick = { onOpenSettings(0) }
+                        ) {
+                            GearGlyph(Modifier.align(Alignment.Center).size(18.dp))
+                        }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Bottom) {
                         if (Prefs.showNextCard) {
