@@ -241,15 +241,6 @@
       ]
     },
     {
-      "id": "cartoon_network_arabic",
-      "name": "كرتون نتورك بالعربية",
-      "category": "kids",
-      "color": "#1C7ED6",
-      "urls": [
-        "http://149.100.11.252:8000/play/a056/index.m3u8"
-      ]
-    },
-    {
       "id": "mbc_3_usa",
       "name": "MBC 3",
       "category": "kids",
@@ -319,15 +310,6 @@
       "color": "#2B8A3E",
       "urls": [
         "https://jrtv-live.ercdn.net/jordansporthd/jordansporthd.m3u8"
-      ]
-    },
-    {
-      "id": "arryadia",
-      "name": "الرياضية المغربية",
-      "category": "sports",
-      "color": "#5C940D",
-      "urls": [
-        "http://149.100.11.252:8000/play/a065/index.m3u8"
       ]
     },
     {
@@ -410,19 +392,6 @@
       "urls": [
         "https://shd-amg-fast.edgenextcdn.net/tx001/playlist.m3u8"
       ]
-    },
-    {
-      "id": "nile_drama",
-      "name": "نايل دراما",
-      "category": "drama",
-      "color": "#364FC7",
-      "urls": [
-        "http://185.9.2.18/chid_352/index.m3u8"
-      ],
-      "headers": {
-        "Referer": "https://entv.dz/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/109.0.0.0 Safari/537.36"
-      }
     },
     {
       "id": "bab_al_hara",
@@ -542,15 +511,6 @@
       ]
     },
     {
-      "id": "al_mashhad",
-      "name": "المشهد",
-      "category": "news",
-      "color": "#4A4A5A",
-      "urls": [
-        "https://amg30483-amg30483c23-amgplt0794.playout.now3.amagi.tv/ts-ap-s1-n1/playlist/amg30483-amg30483c23-amgplt0794/playlist.m3u8?ads.appname=[APP_NAME]&ads.appstoreurl=[APP_STOREURL]&ads.appversion=[APP_VERSION]&ads.bundleid=[APP_BUNDLE]&ads.coppa=0&ads.country=[COUNTRY]&ads.deviceid=[DEVICE_ID]&ads.devicemake=[DEVICE_MAKE]&ads.devicemodel=[DEVICE_MODEL]&ads.devicetype=[DEVICE_TYPE]&ads.donotsell=[DNS]&ads.fck=[FCK]&ads.gdpr=[GDPR]&ads.gdprconsent=[GDPR_CONSENT]&ads.givn=[NONCE]&ads.ic=[IC]&ads.ifa=[IFA]&ads.ifatype=[IFA_TYPE]&ads.ip=[IP]&ads.lat=[LMT]&ads.network_name=[networkname]&ads.targetad=[TARGETAD_ALLOWED]&ads.ua=[UA]&ads.usprivacy=[US_PRIVACY]&ads.viewsize=[VIEWSIZE]"
-      ]
-    },
-    {
       "id": "rt_arabic",
       "name": "RT عربي",
       "category": "news",
@@ -620,15 +580,6 @@
       "color": "#2F6B4F",
       "urls": [
         "https://playlist.fasttvcdn.com/pl/dlkqw1ftuvuuzkcb4pxdcg/Iqraafasttv3/playlist.m3u8"
-      ]
-    },
-    {
-      "id": "iqraa_quran",
-      "name": "اقرأ القرآن",
-      "category": "religious",
-      "color": "#3A5F5A",
-      "urls": [
-        "https://playlist.fasttvcdn.com/pl/dlkqw1ftuvuuzkcb4pxdcg/Iqraafasttv2/playlist.m3u8"
       ]
     },
     {
