@@ -10,11 +10,12 @@ jobs:
     steps:
       - name: Check
         run: |
+          set +e
           out=""
           while read -r url; do
             [ -z "$url" ] && continue
-            body=$(curl -sL -m 20 -A "Mozilla/5.0" "$url" | head -c 400 | tr '\n' ' ')
-            code=$(curl -sL -m 20 -A "Mozilla/5.0" -o /dev/null -w '%{http_code}' "$url")
+            body=$(curl -sL -m 20 -A "Mozilla/5.0" "$url" | head -c 400 2>/dev/null | tr '\n' ' ')
+            code=$(curl -sL -m 20 -A "Mozilla/5.0" -o /dev/null -w '%{http_code}' "$url" || echo ERR)
             first=$(echo "$body" | head -c 120)
             out="$out $code | $url | $first ;;"
           done <<'LIST'
@@ -26,3 +27,5 @@ jobs:
           https://media2.streambrothers.com:1936/8122/8122/playlist.m3u8
           LIST
           echo "::notice::$out"
+
+# run 2
