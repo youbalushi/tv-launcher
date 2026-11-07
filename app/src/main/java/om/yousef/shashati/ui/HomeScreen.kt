@@ -106,9 +106,13 @@ fun HomeScreen(
     // Friday 7:00–18:00: Surah Al-Kahf. Saturday–Thursday: morning adhkar 6–10, evening adhkar 18–20.
     val hour = now.hour
     val friday = now.dayOfWeek == java.time.DayOfWeek.FRIDAY
+    val hasMorning = remember(version) { om.yousef.shashati.data.AdhkarAudio.file(context, true) != null }
+    val hasEvening = remember(version) { om.yousef.shashati.data.AdhkarAudio.file(context, false) != null }
     val special: String? = when {
         friday && hour in 7..17 -> "kahf"
-        // Morning/evening adhkar are paused until a later update.
+        // Adhkar only when the recording has been copied to this TV.
+        !friday && hour in 6..9 && hasMorning -> "morning"
+        !friday && hour in 18..19 && hasEvening -> "evening"
         else -> null
     }
 

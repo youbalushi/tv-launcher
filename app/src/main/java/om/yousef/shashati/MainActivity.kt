@@ -16,6 +16,8 @@ import om.yousef.shashati.data.ChannelRepository
 import om.yousef.shashati.overlay.AlarmScheduler
 import om.yousef.shashati.prayer.PrayerRepository
 import om.yousef.shashati.ui.AdhkarScreen
+import om.yousef.shashati.ui.AudioPlayerScreen
+import om.yousef.shashati.data.AdhkarAudio
 import om.yousef.shashati.ui.AppTheme
 import om.yousef.shashati.ui.KahfScreen
 import om.yousef.shashati.ui.ChannelsScreen
@@ -50,6 +52,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handleIntent(intent)
+        AdhkarAudio.dir(this) // create the folder the laptop copies recordings into
         setContent {
             AppTheme {
                 when (screen) {
@@ -73,7 +76,19 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     Screen.Kahf -> KahfScreen(onBack = { screen = Screen.Home })
-                    Screen.Adhkar -> AdhkarScreen(morning = adhkarMorning, onBack = { screen = Screen.Home })
+                    Screen.Adhkar -> {
+                        val audio = AdhkarAudio.file(this, adhkarMorning)
+                        if (audio != null) {
+                            AudioPlayerScreen(
+                                title = if (adhkarMorning) "أذكار الصباح" else "أذكار المساء",
+                                subtitle = "بصوت الشيخ مشاري العفاسي",
+                                file = audio,
+                                onClose = { screen = Screen.Home }
+                            )
+                        } else {
+                            AdhkarScreen(morning = adhkarMorning, onBack = { screen = Screen.Home })
+                        }
+                    }
                     Screen.Settings -> SettingsScreen(
                         initialSection = settingsSection,
                         onBack = { screen = Screen.Home },
