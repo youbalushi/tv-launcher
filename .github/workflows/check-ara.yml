@@ -1,0 +1,24 @@
+name: Check Arabic channels
+
+on:
+  push:
+    paths: ['tools/check_m3u.py', '.github/workflows/check-ara.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/check_m3u.py https://iptv-org.github.io/iptv/languages/ara.m3u results-ara.json
+      - name: Save results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          mkdir -p results && mv results-ara.json results/ara.json
+          git add results/ara.json
+          git commit -m "نتائج فحص القنوات العربية" || true
+          git push || true
