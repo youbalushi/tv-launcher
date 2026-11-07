@@ -24,6 +24,18 @@
     {
       "id": "kids",
       "name": "أطفال"
+    },
+    {
+      "id": "sports",
+      "name": "رياضة"
+    },
+    {
+      "id": "drama",
+      "name": "مسلسلات وأفلام"
+    },
+    {
+      "id": "docs",
+      "name": "وثائقية وثقافية"
     }
   ],
   "channels": [
@@ -226,6 +238,460 @@
       "urls": [
         "https://5aafcc5de91f1.streamlock.net/atfal1.com/atfal2/playlist.m3u8",
         "https://5d658d7e9f562.streamlock.net/atfal1.com/atfal2/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "cartoon_network_arabic",
+      "name": "كرتون نتورك بالعربية",
+      "category": "kids",
+      "color": "#1C7ED6",
+      "urls": [
+        "http://149.100.11.252:8000/play/a056/index.m3u8"
+      ]
+    },
+    {
+      "id": "mbc_3_usa",
+      "name": "MBC 3",
+      "category": "kids",
+      "color": "#F08C00",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-3-usa/5d58265a862a476dc7f97694addb5ded/index.m3u8"
+      ]
+    },
+    {
+      "id": "taha_tv",
+      "name": "طه",
+      "category": "kids",
+      "color": "#2B8A3E",
+      "urls": [
+        "https://stream.starmenajo.com/hls/app/live/ts:fhd.m3u8"
+      ]
+    },
+    {
+      "id": "babyfirst",
+      "name": "بيبي فيرست",
+      "category": "kids",
+      "color": "#C2255C",
+      "urls": [
+        "https://cdn.fast.jwp.services/v1/channel/1_jB6940Ei_TvhvIHDL/manifest.m3u8"
+      ]
+    },
+    {
+      "id": "ktv_sport",
+      "name": "الكويت الرياضية",
+      "category": "sports",
+      "color": "#1864AB",
+      "urls": [
+        "https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8"
+      ]
+    },
+    {
+      "id": "ktv_sport_plus",
+      "name": "الكويت الرياضية بلس",
+      "category": "sports",
+      "color": "#1971C2",
+      "urls": [
+        "https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8"
+      ]
+    },
+    {
+      "id": "bahrain_sports_1",
+      "name": "البحرين الرياضية 1",
+      "category": "sports",
+      "color": "#C92A2A",
+      "urls": [
+        "https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "bahrain_sports_2",
+      "name": "البحرين الرياضية 2",
+      "category": "sports",
+      "color": "#A61E4D",
+      "urls": [
+        "https://5c7b683162943.streamlock.net/live/ngrp:bahrainsportstwo_all/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "jordan_sport",
+      "name": "الأردن الرياضية",
+      "category": "sports",
+      "color": "#2B8A3E",
+      "urls": [
+        "https://jrtv-live.ercdn.net/jordansporthd/jordansporthd.m3u8"
+      ]
+    },
+    {
+      "id": "arryadia",
+      "name": "الرياضية المغربية",
+      "category": "sports",
+      "color": "#5C940D",
+      "urls": [
+        "http://149.100.11.252:8000/play/a065/index.m3u8"
+      ]
+    },
+    {
+      "id": "mbc_1",
+      "name": "MBC 1",
+      "category": "drama",
+      "color": "#1F3A63",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-1/15cf99af5de54063fdabfefe66adc075/index.m3u8"
+      ]
+    },
+    {
+      "id": "mbc_4",
+      "name": "MBC 4",
+      "category": "drama",
+      "color": "#5F3DC4",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-4/24f134f1cd63db9346439e96b86ca6ed/index.m3u8"
+      ]
+    },
+    {
+      "id": "mbc_5",
+      "name": "MBC 5",
+      "category": "drama",
+      "color": "#0B7285",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-5/ee6b000cee0629411b666ab26cb13e9b/index.m3u8"
+      ]
+    },
+    {
+      "id": "mbc_drama",
+      "name": "MBC دراما",
+      "category": "drama",
+      "color": "#862E9C",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-drama/2c28a458e2f3253e678b07ac7d13fe71/index.m3u8"
+      ]
+    },
+    {
+      "id": "mbc_masr",
+      "name": "MBC مصر",
+      "category": "drama",
+      "color": "#C92A2A",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr/956eac069c78a35d47245db6cdbb1575/index.m3u8"
+      ]
+    },
+    {
+      "id": "mbc_masr_2",
+      "name": "MBC مصر 2",
+      "category": "drama",
+      "color": "#A61E4D",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-2/754931856515075b0aabf0e583495c68/index.m3u8"
+      ]
+    },
+    {
+      "id": "mbc_iraq",
+      "name": "MBC العراق",
+      "category": "drama",
+      "color": "#2F9E44",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-iraq/e38c44b1b43474e1c39cb5b90203691e/index.m3u8"
+      ]
+    },
+    {
+      "id": "mbc_bollywood",
+      "name": "MBC بوليوود",
+      "category": "drama",
+      "color": "#E8590C",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-bollywood/546eb40d7dcf9a209255dd2496903764/index.m3u8"
+      ]
+    },
+    {
+      "id": "aflam",
+      "name": "أفلام",
+      "category": "drama",
+      "color": "#495057",
+      "urls": [
+        "https://shd-amg-fast.edgenextcdn.net/tx001/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "nile_drama",
+      "name": "نايل دراما",
+      "category": "drama",
+      "color": "#364FC7",
+      "urls": [
+        "http://185.9.2.18/chid_352/index.m3u8"
+      ],
+      "headers": {
+        "Referer": "https://entv.dz/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/109.0.0.0 Safari/537.36"
+      }
+    },
+    {
+      "id": "bab_al_hara",
+      "name": "باب الحارة",
+      "category": "drama",
+      "color": "#7A5A2A",
+      "urls": [
+        "https://shd-amg-fast.edgenextcdn.net/tx010/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "qatar_television_2",
+      "name": "قطر 2",
+      "category": "family",
+      "color": "#6E2A3F",
+      "urls": [
+        "https://live.kwikmotion.com/qtv2live/qtv2.smil/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "al_rayyan_tv",
+      "name": "الريان",
+      "category": "family",
+      "color": "#8F3A5A",
+      "urls": [
+        "https://alrayyancdn.vidgyor.com/pub-noalrayy3pwz0l/liveabr/playlist_dvr.m3u8"
+      ]
+    },
+    {
+      "id": "bahrain_tv",
+      "name": "تلفزيون البحرين",
+      "category": "family",
+      "color": "#C92A2A",
+      "urls": [
+        "https://5c7b683162943.streamlock.net/live/ngrp:bahraintvmain_all/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "sbc",
+      "name": "SBC",
+      "category": "family",
+      "color": "#2F6B3A",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-sbc/90e09c0c28db26435799b4a14892a167/index.m3u8"
+      ]
+    },
+    {
+      "id": "al_saudiya_alaan",
+      "name": "السعودية الآن",
+      "category": "family",
+      "color": "#2F6B3A",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-ksa-now/71ed3aa814c643306c0a8bc4fcc7d17f/index.m3u8"
+      ]
+    },
+    {
+      "id": "ajman_tv",
+      "name": "عجمان",
+      "category": "family",
+      "color": "#3F5A7A",
+      "urls": [
+        "https://cdn1.logichost.in/ajmantv/live/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "roya_tv",
+      "name": "رؤيا",
+      "category": "arab",
+      "color": "#C2255C",
+      "urls": [
+        "https://live.kwikmotion.com/royatvpublic/royatv.smil/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "jordan_tv",
+      "name": "التلفزيون الأردني",
+      "category": "arab",
+      "color": "#2B8A3E",
+      "urls": [
+        "https://jrtv-live.ercdn.net/jordanhd/jordanhd.m3u8"
+      ]
+    },
+    {
+      "id": "al_ekhbariya",
+      "name": "الإخبارية السعودية",
+      "category": "news",
+      "color": "#1F5F3A",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-al-ekhbaria/297b3ef1cd0633ad9cfba7473a686a06/index.m3u8"
+      ]
+    },
+    {
+      "id": "al_araby_tv",
+      "name": "العربي",
+      "category": "news",
+      "color": "#7A2A2A",
+      "urls": [
+        "https://live.kwikmotion.com/alaraby1live/alaraby_abr/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "al_ghad_tv",
+      "name": "الغد",
+      "category": "news",
+      "color": "#2A5F7A",
+      "urls": [
+        "https://eazyvwqssi.erbvr.com/alghadtv/alghadtv.m3u8"
+      ]
+    },
+    {
+      "id": "ktv_news",
+      "name": "الكويت الإخبارية",
+      "category": "news",
+      "color": "#1864AB",
+      "urls": [
+        "https://kwtkbta.cdn.mangomolo.com/kb/smil:kb.stream.smil/chunklist.m3u8"
+      ]
+    },
+    {
+      "id": "al_mashhad",
+      "name": "المشهد",
+      "category": "news",
+      "color": "#4A4A5A",
+      "urls": [
+        "https://amg30483-amg30483c23-amgplt0794.playout.now3.amagi.tv/ts-ap-s1-n1/playlist/amg30483-amg30483c23-amgplt0794/playlist.m3u8?ads.appname=[APP_NAME]&ads.appstoreurl=[APP_STOREURL]&ads.appversion=[APP_VERSION]&ads.bundleid=[APP_BUNDLE]&ads.coppa=0&ads.country=[COUNTRY]&ads.deviceid=[DEVICE_ID]&ads.devicemake=[DEVICE_MAKE]&ads.devicemodel=[DEVICE_MODEL]&ads.devicetype=[DEVICE_TYPE]&ads.donotsell=[DNS]&ads.fck=[FCK]&ads.gdpr=[GDPR]&ads.gdprconsent=[GDPR_CONSENT]&ads.givn=[NONCE]&ads.ic=[IC]&ads.ifa=[IFA]&ads.ifatype=[IFA_TYPE]&ads.ip=[IP]&ads.lat=[LMT]&ads.network_name=[networkname]&ads.targetad=[TARGETAD_ALLOWED]&ads.ua=[UA]&ads.usprivacy=[US_PRIVACY]&ads.viewsize=[VIEWSIZE]"
+      ]
+    },
+    {
+      "id": "rt_arabic",
+      "name": "RT عربي",
+      "category": "news",
+      "color": "#2B8A3E",
+      "urls": [
+        "https://rt-arb.rttv.com/dvr/rtarab/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "trt_arabi",
+      "name": "TRT عربي",
+      "category": "news",
+      "color": "#C92A2A",
+      "urls": [
+        "https://tv-trtarabi.medya.trt.com.tr/master.m3u8"
+      ]
+    },
+    {
+      "id": "dw_arabic",
+      "name": "DW عربية",
+      "category": "news",
+      "color": "#1C3D6E",
+      "urls": [
+        "https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/master.m3u8"
+      ]
+    },
+    {
+      "id": "france_24_arabic",
+      "name": "فرانس 24",
+      "category": "news",
+      "color": "#1971C2",
+      "urls": [
+        "https://live.france24.com/hls/live/2037222-b/F24_AR_HI_HLS/master_5000.m3u8"
+      ]
+    },
+    {
+      "id": "medi1tv_arabic",
+      "name": "ميدي 1",
+      "category": "news",
+      "color": "#E8590C",
+      "urls": [
+        "https://cdn.live.easybroadcast.io/abr_corp/83_medi1tv-arabic_g90v4ec/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "al_jazeera_mubasher_24",
+      "name": "الجزيرة مباشر 24",
+      "category": "news",
+      "color": "#6E4A24",
+      "urls": [
+        "https://live-hls-apps-ajm24-fa.getaj.net/AJM24/index.m3u8"
+      ]
+    },
+    {
+      "id": "alistiqama_tv",
+      "name": "الاستقامة",
+      "category": "religious",
+      "color": "#2F5F4A",
+      "urls": [
+        "https://jmc-live.ercdn.net/alistiqama/alistiqama.m3u8"
+      ]
+    },
+    {
+      "id": "iqraa_arabic",
+      "name": "اقرأ",
+      "category": "religious",
+      "color": "#2F6B4F",
+      "urls": [
+        "https://playlist.fasttvcdn.com/pl/dlkqw1ftuvuuzkcb4pxdcg/Iqraafasttv3/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "iqraa_quran",
+      "name": "اقرأ القرآن",
+      "category": "religious",
+      "color": "#3A5F5A",
+      "urls": [
+        "https://playlist.fasttvcdn.com/pl/dlkqw1ftuvuuzkcb4pxdcg/Iqraafasttv2/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "bahrain_quran",
+      "name": "قرآن البحرين",
+      "category": "religious",
+      "color": "#2F5F4A",
+      "urls": [
+        "https://5c7b683162943.streamlock.net/live/ngrp:bahrainquran_all/playlist.m3u8"
+      ]
+    },
+    {
+      "id": "ktv_al_qurain",
+      "name": "الكويت القرين",
+      "category": "religious",
+      "color": "#3F5A4A",
+      "urls": [
+        "https://kwtktvaqta.cdn.mangomolo.com/ktvaq/smil:tktvaq.stream.smil/chunklist.m3u8"
+      ]
+    },
+    {
+      "id": "ktv_ethraa",
+      "name": "الكويت إثراء",
+      "category": "religious",
+      "color": "#4A5F3A",
+      "urls": [
+        "https://kwtethta.cdn.mangomolo.com/eth/smil:eth.stream.smil/chunklist.m3u8"
+      ]
+    },
+    {
+      "id": "asharq_discovery",
+      "name": "الشرق ديسكفري",
+      "category": "docs",
+      "color": "#4A4A5A",
+      "urls": [
+        "https://svs.itworkscdn.net/asharqdiscoverylive/asharqd.smil/playlist_dvr.m3u8"
+      ]
+    },
+    {
+      "id": "asharq_documentary",
+      "name": "الشرق الوثائقية",
+      "category": "docs",
+      "color": "#5A4A3A",
+      "urls": [
+        "https://svs.itworkscdn.net/asharqdocumentarylive/asharqdocumentary.smil/playlist_dvr.m3u8"
+      ]
+    },
+    {
+      "id": "saudi_thaqafiya_tv",
+      "name": "السعودية الثقافية",
+      "category": "docs",
+      "color": "#2F6B3A",
+      "urls": [
+        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-thaqafeyyah/28c0d2a20dbf1dc049ce15d3973f494b/index.m3u8"
+      ]
+    },
+    {
+      "id": "al_arabiya_programs",
+      "name": "العربية برامج",
+      "category": "docs",
+      "color": "#2A5F7A",
+      "urls": [
+        "https://live.alarabiya.net/alarabiapublish/aaprograms.smil/playlist.m3u8"
       ]
     }
   ]

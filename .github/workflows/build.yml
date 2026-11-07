@@ -3,6 +3,10 @@ name: Build APK
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'channels.json'
+      - 'results/**'
+      - 'tools/**'
   workflow_dispatch:
 
 permissions:
