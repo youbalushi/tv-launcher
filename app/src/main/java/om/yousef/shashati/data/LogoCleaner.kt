@@ -89,27 +89,64 @@ object LogoCleaner {
         }
     }
 
+    private fun luma(c: Int) = (0.299f * r(c) + 0.587f * g(c) + 0.114f * b(c)) / 255f
+
+    /** Very dark parts (black or navy lettering) become light, keeping their hue. */
     private fun lighten(px: IntArray) {
         var dark = 0
         var visible = 0
         for (c in px) {
             if (a(c) < 128) continue
             visible++
-            val mx = max(r(c), max(g(c), b(c)))
-            val mn = min(r(c), min(g(c), b(c)))
-            if (mx < 90 && mx - mn < 40) dark++
+            if (luma(c) < 0.27f) dark++
         }
-        if (visible == 0 || dark < visible * 0.15f) return
+        if (visible == 0 || dark < visible * 0.12f) return
         for (i in px.indices) {
             val c = px[i]
             if (a(c) == 0) continue
-            val mx = max(r(c), max(g(c), b(c)))
-            val mn = min(r(c), min(g(c), b(c)))
-            val sat = if (mx == 0) 0f else (mx - mn).toFloat() / mx
-            if (sat < 0.25f && mx < 140) {
-                val v = 255 - abs(mx - 20) / 2
-                px[i] = (a(c) shl 24) or (v shl 16) or (v shl 8) or v
-            }
+            val y = luma(c)
+            if (y >= 0.33f) continue
+            val hsl = toHsl(r(c), g(c), b(c))
+            // smooth: the darker the pixel, the lighter it becomes
+            val t = ((0.33f - y) / 0.33f).coerceIn(0f, 1f)
+            val l = hsl[2] + (0.9f - hsl[2]) * t
+            val sat = hsl[1] * (1f - 0.35f * t)
+            val rgb = fromHsl(hsl[0], sat, l)
+            px[i] = (a(c) shl 24) or (rgb[0] shl 16) or (rgb[1] shl 8) or rgb[2]
         }
+    }
+
+    private fun toHsl(r: Int, g: Int, b: Int): FloatArray {
+        val rf = r / 255f; val gf = g / 255f; val bf = b / 255f
+        val mx = max(rf, max(gf, bf)); val mn = min(rf, min(gf, bf))
+        val l = (mx + mn) / 2f
+        if (mx == mn) return floatArrayOf(0f, 0f, l)
+        val d = mx - mn
+        val s = if (l > 0.5f) d / (2f - mx - mn) else d / (mx + mn)
+        val h = when (mx) {
+            rf -> ((gf - bf) / d + (if (gf < bf) 6 else 0)) / 6f
+            gf -> ((bf - rf) / d + 2) / 6f
+            else -> ((rf - gf) / d + 4) / 6f
+        }
+        return floatArrayOf(h, s, l)
+    }
+
+    private fun fromHsl(h: Float, s: Float, l: Float): IntArray {
+        if (s == 0f) { val v = (l * 255).toInt().coerceIn(0, 255); return intArrayOf(v, v, v) }
+        val q = if (l < 0.5f) l * (1 + s) else l + s - l * s
+        val p = 2 * l - q
+        fun hue(t0: Float): Int {
+            var t = t0
+            if (t < 0) t += 1f
+            if (t > 1) t -= 1f
+            val v = when {
+                t < 1f / 6 -> p + (q - p) * 6 * t
+                t < 1f / 2 -> q
+                t < 2f / 3 -> p + (q - p) * (2f / 3 - t) * 6
+                else -> p
+            }
+            return (v * 255).toInt().coerceIn(0, 255)
+        }
+        return intArrayOf(hue(h + 1f / 3), hue(h), hue(h - 1f / 3))
     }
 }
