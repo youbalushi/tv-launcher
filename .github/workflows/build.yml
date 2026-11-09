@@ -37,27 +37,33 @@ jobs:
         if: failure()
         run: |
           grep -E '^e: ' build.log | head -60 | while IFS= read -r line; do
-            f=$(echo "$line" | sed -E 's#^e: file://[^ ]*/(app/src/[^:]*):([0-9]+):([0-9]+) (.*)#\1#')
-            l=$(echo "$line" | sed -E 's#^e: file://[^ ]*/app/src/[^:]*:([0-9]+):.*#\1#')
-            m=$(echo "$line" | sed -E 's#^e: file://[^ ]*/app/src/[^:]*:[0-9]+:[0-9]+ ##')
+            f=$(echo "$line" | sed -E 's#^e: file://[^ ]*/([a-z]*/src/[^:]*):([0-9]+):([0-9]+) (.*)#\1#')
+            l=$(echo "$line" | sed -E 's#^e: file://[^ ]*/[a-z]*/src/[^:]*:([0-9]+):.*#\1#')
+            m=$(echo "$line" | sed -E 's#^e: file://[^ ]*/[a-z]*/src/[^:]*:[0-9]+:[0-9]+ ##')
             echo "::error file=$f,line=$l::$m"
           done
           grep -E 'FAILURE|What went wrong|ERROR|error:' -A6 build.log | head -80 | while IFS= read -r line; do
             echo "::warning::$line"
           done
 
-      - name: Rename APK
-        run: cp app/build/outputs/apk/release/app-release.apk shashati.apk
+      - name: Rename APKs
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk shashati.apk
+          cp remote/build/outputs/apk/release/remote-release.apk shashati-remote.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: shashati-apk
-          path: shashati.apk
+          path: |
+            shashati.apk
+            shashati-remote.apk
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: شاشتي – إصدار ${{ github.run_number }}
-          files: shashati.apk
+          files: |
+            shashati.apk
+            shashati-remote.apk
           make_latest: true

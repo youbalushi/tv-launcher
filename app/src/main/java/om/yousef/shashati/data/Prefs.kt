@@ -108,6 +108,8 @@ object Prefs {
     // Caches
     var channelsJson by str("channelsJson")
     var channelFavs by str("channelFavs")
+    /** Phones paired with this TV's remote service (token -> phone name, one per line as token|name). */
+    var remoteTokensRaw by str("remoteTokens")
     var prayerCache by str("prayerCache")
     var prayerFetchedDay by str("prayerFetchedDay")
 

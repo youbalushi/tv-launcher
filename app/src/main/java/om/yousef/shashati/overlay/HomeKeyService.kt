@@ -22,8 +22,12 @@ class HomeKeyService : AccessibilityService() {
         "com.mitv.tvhome.atv",
     )
 
+    private var remote: RemoteServer? = null
+
     override fun onServiceConnected() {
         super.onServiceConnected()
+        // Lets the "ريموت شاشتي" phone app control this TV.
+        remote = RemoteServer(this).also { it.start() }
         // The service starts right after the TV boots: open شاشتي straight away.
         if (!Prefs.originalAllowed) openHome()
     }
@@ -74,6 +78,12 @@ class HomeKeyService : AccessibilityService() {
     }
 
     override fun onInterrupt() {}
+
+    override fun onDestroy() {
+        remote?.stop()
+        remote = null
+        super.onDestroy()
+    }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
         if (event.keyCode != KeyEvent.KEYCODE_HOME) return false
