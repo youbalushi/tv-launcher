@@ -116,6 +116,23 @@ object Prefs {
     var homeAppsRaw by str("homeApps")
     var weatherJson by str("weatherJson")
     var weatherAt by long("weatherAt", 0L)
+
+    /** Kahf / morning / evening adhkar played today (kind|date per line, last few days only). */
+    private var playedRaw by str("played")
+    fun playedToday(kind: String, day: java.time.LocalDate) = playedRaw?.lines()?.contains("$kind|$day") == true
+    fun markPlayed(kind: String, day: java.time.LocalDate) {
+        val keep = playedRaw?.lines()?.filter { it.isNotBlank() }?.takeLast(6).orEmpty()
+        playedRaw = (keep + "$kind|$day").distinct().joinToString("\n")
+    }
+
+    /** One-time: adhkar were already played on 9 Nov 2026 before this feature existed. */
+    private var playedSeeded by bool("playedSeeded", false)
+    fun seedPlayed() {
+        if (playedSeeded) return
+        playedSeeded = true
+        val d = java.time.LocalDate.of(2026, 11, 9)
+        markPlayed("morning", d); markPlayed("evening", d)
+    }
     var prayerCache by str("prayerCache")
     var prayerFetchedDay by str("prayerFetchedDay")
 

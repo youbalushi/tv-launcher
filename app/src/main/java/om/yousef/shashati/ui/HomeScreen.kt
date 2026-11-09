@@ -170,58 +170,61 @@ fun HomeScreen(
         !friday && hour in 6..9 && hasMorning -> "morning"
         !friday && hour in 18..19 && hasEvening -> "evening"
         else -> null
-    }
+    }?.takeIf { !Prefs.playedToday(it, now.toLocalDate()) } // once played today, the button goes away
 
     Box(Modifier.fillMaxSize()) {
         HomeBackground()
 
         Column(Modifier.fillMaxSize().padding(start = 38.dp, end = 38.dp, top = 14.dp, bottom = 30.dp)) {
-            // ---------- Top: clock block (right) and tools + weather (left) ----------
-            Row(Modifier.fillMaxWidth().height(192.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                Column(horizontalAlignment = Alignment.Start) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.width(2.5.dp).height(15.dp).background(C.gold, RoundedCornerShape(2.dp)))
-                        Spacer(Modifier.width(9.dp))
-                        Text(Dates.greeting(now.toLocalTime()), fontSize = 14.sp, color = Color(0xEEFFFFFF))
+            // ---------- Line 1: greeting (right) … dhikr, weather, Wi-Fi, settings (left) ----------
+            Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.width(2.5.dp).height(16.dp).background(C.gold, RoundedCornerShape(2.dp)))
+                Spacer(Modifier.width(9.dp))
+                Text(Dates.greeting(now.toLocalTime()), fontSize = 15.sp, color = Color(0xF2FFFFFF))
+                Spacer(Modifier.weight(1f))
+                Text(
+                    Dates.dhikr(now.toLocalDate()), fontSize = 15.sp, fontWeight = FontWeight.Medium,
+                    color = Color(0xFFFFE2A8), maxLines = 1,
+                )
+                Spacer(Modifier.width(14.dp))
+                // weather pill
+                GlowTile(
+                    Modifier.height(36.dp), shape = RoundedCornerShape(50), background = glassBrush,
+                    onClick = { onOpenSettings(2) }
+                ) {
+                    Row(Modifier.padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        LineGlyph(Glyph.Pin, Modifier.size(13.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(weather?.place ?: om.yousef.shashati.data.Locations.current().name, fontSize = 13.sp)
+                        Box(Modifier.padding(horizontal = 10.dp).width(1.dp).height(18.dp).background(Color(0x44FFFFFF)))
+                        Text(weather?.let { "${it.temp}°" } ?: "--°", fontSize = 19.sp, fontWeight = FontWeight.Medium)
+                        Spacer(Modifier.width(6.dp))
+                        WeatherGlyph(weather?.code ?: 2, weather?.isDay ?: (hour in 6..17), Modifier.size(28.dp))
                     }
-                    Text(
-                        Dates.dhikr(now.toLocalDate()), fontSize = 11.5.sp, color = Color(0xCCFFDFA0),
-                        modifier = Modifier.padding(start = 11.dp, top = 1.dp)
-                    )
-                    Text(
-                        Dates.time12(now.toLocalTime()), fontSize = 64.sp, fontWeight = FontWeight.Medium,
-                        lineHeight = 68.sp, letterSpacing = 1.sp,
-                        modifier = Modifier.padding(top = 0.dp)
-                    )
-                    DateLine(Glyph.Calendar, Dates.gregorianFull(now.toLocalDate()))
-                    Spacer(Modifier.height(3.dp))
-                    DateLine(Glyph.Moon, Dates.hijri(now.toLocalDate()) + " هـ")
                 }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    // weather pill (in RTL the first item sits on the right)
-                    GlowTile(
-                        Modifier.height(36.dp), shape = RoundedCornerShape(50), background = glassBrush,
-                        onClick = { onOpenSettings(2) }
-                    ) {
-                        Row(Modifier.padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            LineGlyph(Glyph.Pin, Modifier.size(13.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(weather?.place ?: om.yousef.shashati.data.Locations.current().name, fontSize = 13.sp)
-                            Box(Modifier.padding(horizontal = 10.dp).width(1.dp).height(18.dp).background(Color(0x44FFFFFF)))
-                            Text(weather?.let { "${it.temp}°" } ?: "--°", fontSize = 19.sp, fontWeight = FontWeight.Medium)
-                            Spacer(Modifier.width(6.dp))
-                            WeatherGlyph(weather?.code ?: 2, weather?.isDay ?: (hour in 6..17), Modifier.size(28.dp))
-                        }
-                    }
-                    GlowTile(Modifier.size(36.dp), shape = CircleShape, background = glassBrush, onClick = { openWifiSettings(context) }) {
-                        NetworkIndicator(Modifier.size(18.dp))
-                    }
-                    GlowTile(Modifier.size(36.dp), shape = CircleShape, background = glassBrush, onClick = { onOpenSettings(0) }) {
-                        GearGlyph(Modifier.size(19.dp))
-                    }
+                Spacer(Modifier.width(12.dp))
+                GlowTile(Modifier.size(36.dp), shape = CircleShape, background = glassBrush, onClick = { openWifiSettings(context) }) {
+                    NetworkIndicator(Modifier.size(18.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                GlowTile(Modifier.size(36.dp), shape = CircleShape, background = glassBrush, onClick = { onOpenSettings(0) }) {
+                    GearGlyph(Modifier.size(19.dp))
                 }
             }
+
+            // ---------- Line 2: clock (right) and the two dates (left), side by side ----------
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    Dates.time12(now.toLocalTime()), fontSize = 64.sp, fontWeight = FontWeight.Medium,
+                    lineHeight = 68.sp, letterSpacing = 1.sp,
+                )
+                Spacer(Modifier.weight(1f))
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    DateLine(Glyph.Calendar, Dates.gregorianFull(now.toLocalDate()))
+                    DateLine(Glyph.Moon, Dates.hijri(now.toLocalDate()) + " هـ")
+                }
+            }
+            Spacer(Modifier.height(18.dp))
 
             // ---------- Channels ----------
             SectionHead(Glyph.Tv, "القنوات")
@@ -387,6 +390,7 @@ private fun PrayerStrip(
                     Modifier.fillMaxWidth().height(38.dp), shape = RoundedCornerShape(50),
                     background = Brush.horizontalGradient(listOf(Color(0x55FFC46B), Color(0x33FFC46B))),
                     onClick = {
+                        Prefs.markPlayed(special, now.toLocalDate())
                         when (special) { "kahf" -> onOpenKahf(); "morning" -> onOpenAdhkar(true); else -> onOpenAdhkar(false) }
                     }
                 ) {

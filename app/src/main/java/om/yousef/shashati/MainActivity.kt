@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         handleIntent(intent)
         AdhkarAudio.dir(this) // create the folder the laptop copies recordings into
+        Prefs.seedPlayed()
         setContent {
             AppTheme {
                 when (screen) {
