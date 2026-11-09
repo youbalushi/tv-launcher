@@ -147,7 +147,16 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        NetworkIndicator()
+                        // OK on the Wi-Fi icon opens the TV's list of Wi-Fi networks.
+                        Focusable(
+                            modifier = Modifier.size(32.dp),
+                            shape = CircleShape,
+                            background = Color(0x1AFFFFFF),
+                            scaleOnFocus = 1.12f,
+                            onClick = { openWifiSettings(context) }
+                        ) {
+                            NetworkIndicator(Modifier.align(Alignment.Center).size(18.dp))
+                        }
                         Focusable(
                             modifier = Modifier.size(32.dp),
                             shape = CircleShape,
@@ -357,5 +366,20 @@ private fun GearGlyph(modifier: Modifier) {
             val outer = Offset(c.x + (s * 0.46f * Math.cos(a)).toFloat(), c.y + (s * 0.46f * Math.sin(a)).toFloat())
             drawLine(Color.White, inner, outer, s * 0.12f, StrokeCap.Round)
         }
+    }
+}
+
+
+/** Opens the TV's Wi-Fi network list (falls back to the general network / settings screens). */
+private fun openWifiSettings(context: android.content.Context) {
+    val actions = listOf(
+        android.provider.Settings.ACTION_WIFI_SETTINGS,
+        "android.settings.NETWORK_SETTINGS",
+        android.provider.Settings.ACTION_WIRELESS_SETTINGS,
+        android.provider.Settings.ACTION_SETTINGS,
+    )
+    for (a in actions) {
+        val i = android.content.Intent(a).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (i.resolveActivity(context.packageManager) != null && runCatching { context.startActivity(i) }.isSuccess) return
     }
 }
