@@ -107,7 +107,7 @@ fun GlowTile(
         contentAlignment = Alignment.Center,
     ) {
         // glassy highlight
-        Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Color(0x24FFFFFF), Color.Transparent), Offset.Zero, Offset(260f, 260f))))
+        Box(Modifier.matchParentSize().background(Brush.linearGradient(listOf(Color(0x24FFFFFF), Color.Transparent), Offset.Zero, Offset(260f, 260f))))
         content(focused)
     }
 }
@@ -177,7 +177,7 @@ fun HomeScreen(
 
         Column(Modifier.fillMaxSize().padding(start = 38.dp, end = 38.dp, top = 14.dp, bottom = 30.dp)) {
             // ---------- Top: clock block (right) and tools + weather (left) ----------
-            Row(Modifier.fillMaxWidth().height(150.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+            Row(Modifier.fillMaxWidth().height(176.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 Column(horizontalAlignment = Alignment.Start) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.width(2.5.dp).height(15.dp).background(C.gold, RoundedCornerShape(2.dp)))
@@ -189,8 +189,8 @@ fun HomeScreen(
                         modifier = Modifier.padding(start = 11.dp, top = 1.dp)
                     )
                     Text(
-                        Dates.time12(now.toLocalTime()), fontSize = 66.sp, fontWeight = FontWeight.Medium,
-                        lineHeight = 70.sp, letterSpacing = 1.sp,
+                        Dates.time12(now.toLocalTime()), fontSize = 64.sp, fontWeight = FontWeight.Medium,
+                        lineHeight = 68.sp, letterSpacing = 1.sp,
                         modifier = Modifier.padding(top = 0.dp)
                     )
                     DateLine(Glyph.Calendar, Dates.gregorianFull(now.toLocalDate()))
