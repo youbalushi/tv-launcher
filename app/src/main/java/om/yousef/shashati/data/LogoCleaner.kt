@@ -94,13 +94,17 @@ object LogoCleaner {
     /** Very dark parts (black or navy lettering) become light, keeping their hue. */
     private fun lighten(px: IntArray) {
         var dark = 0
+        var bright = 0
         var visible = 0
         for (c in px) {
-            if (a(c) < 128) continue
+            if (a(c) < 200) continue
             visible++
-            if (luma(c) < 0.27f) dark++
+            val y = luma(c)
+            if (y < 0.27f) dark++
+            if (y > 0.85f) bright++
         }
-        if (visible == 0 || dark < visible * 0.12f) return
+        // Only for logos that are mostly dark lettering, not dark text sitting on a white box.
+        if (visible == 0 || dark < visible * 0.2f || bright > visible * 0.25f) return
         for (i in px.indices) {
             val c = px[i]
             if (a(c) == 0) continue
