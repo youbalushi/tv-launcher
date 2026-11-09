@@ -182,10 +182,33 @@ fun HomeScreen(
                 Spacer(Modifier.width(9.dp))
                 Text(Dates.greeting(now.toLocalTime()), fontSize = 15.sp, color = Color(0xF2FFFFFF))
                 Spacer(Modifier.weight(1f))
-                Text(
-                    Dates.dhikr(now.toLocalDate()), fontSize = 15.sp, fontWeight = FontWeight.Medium,
-                    color = Color(0xFFFFE2A8), maxLines = 1,
-                )
+                // Dhikr in a glass frame like the weather; at Kahf / adhkar time it becomes the play button.
+                if (special != null) {
+                    GlowTile(
+                        Modifier.height(36.dp), shape = RoundedCornerShape(50),
+                        background = Brush.horizontalGradient(listOf(Color(0x40FFC46B), Color(0x26FFC46B))),
+                        onClick = {
+                            Prefs.markPlayed(special, now.toLocalDate())
+                            when (special) { "kahf" -> onOpenKahf(); "morning" -> onOpenAdhkar(true); else -> onOpenAdhkar(false) }
+                        }
+                    ) {
+                        Text(
+                            when (special) { "kahf" -> "▶  تشغيل سورة الكهف"; "morning" -> "▶  تشغيل أذكار الصباح"; else -> "▶  تشغيل أذكار المساء" },
+                            fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFFFE2A8),
+                            modifier = Modifier.padding(horizontal = 18.dp)
+                        )
+                    }
+                } else {
+                    Box(
+                        Modifier.height(36.dp)
+                            .background(glassBrush, RoundedCornerShape(50))
+                            .border(1.dp, Brush.linearGradient(listOf(Color(0x55FFFFFF), Color(0x1AFFFFFF))), RoundedCornerShape(50))
+                            .padding(horizontal = 18.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(Dates.dhikr(now.toLocalDate()), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFFFFE2A8), maxLines = 1)
+                    }
+                }
                 Spacer(Modifier.width(14.dp))
                 // weather pill
                 GlowTile(
@@ -363,23 +386,9 @@ private fun PrayerStrip(
         }
         Box(Modifier.width(1.dp).height(36.dp).background(Color(0x33FFFFFF)))
 
-        // Countdown, or the Kahf / adhkar button when it is time
+        // Countdown to the next prayer
         Box(Modifier.width(190.dp).fillMaxHeight().padding(horizontal = 14.dp), contentAlignment = Alignment.Center) {
-            if (special != null) {
-                GlowTile(
-                    Modifier.fillMaxWidth().height(38.dp), shape = RoundedCornerShape(50),
-                    background = Brush.horizontalGradient(listOf(Color(0x55FFC46B), Color(0x33FFC46B))),
-                    onClick = {
-                        Prefs.markPlayed(special, now.toLocalDate())
-                        when (special) { "kahf" -> onOpenKahf(); "morning" -> onOpenAdhkar(true); else -> onOpenAdhkar(false) }
-                    }
-                ) {
-                    Text(
-                        when (special) { "kahf" -> "▶  سورة الكهف"; "morning" -> "▶  أذكار الصباح"; else -> "▶  أذكار المساء" },
-                        fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFFFFDFA0)
-                    )
-                }
-            } else if (Prefs.showNextCard) {
+            if (Prefs.showNextCard) {
                 val total = Duration.between(prev.time, next.time).toMinutes().coerceAtLeast(1)
                 val left = Duration.between(now, next.time).toMinutes() + 1
                 val progress = (1f - left.toFloat() / total).coerceIn(0f, 1f)

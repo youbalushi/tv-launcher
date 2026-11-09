@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -155,13 +156,21 @@ fun ChannelsScreen(version: Int, onBack: () -> Unit, onPlay: (List<Channel>, Int
                                     .width(120.dp)
                                     .fillMaxSize()
                                     .clip(RoundedCornerShape(9.dp))
-                                    .background(Color(ch.color))
+                                    .background(Color(0x1FFFFFFF))
                             ) {
+                                var logo by remember(ch.id) { mutableStateOf(om.yousef.shashati.data.Logos.cachedChannel(context, ch)) }
+                                LaunchedEffect(ch.id) { if (logo == null) logo = om.yousef.shashati.data.Logos.channel(context, ch) }
                                 if (isFocused && previewReady && focused == ch) {
                                     AndroidView(
                                         factory = { ctx -> TextureView(ctx).also { player.setVideoTextureView(it) } },
                                         onRelease = { player.clearVideoTextureView(it) },
                                         modifier = Modifier.fillMaxSize()
+                                    )
+                                } else if (logo != null) {
+                                    androidx.compose.foundation.Image(
+                                        logo!!, ch.name,
+                                        Modifier.align(Alignment.Center).fillMaxWidth(0.78f).fillMaxHeight(0.6f),
+                                        contentScale = androidx.compose.ui.layout.ContentScale.Fit
                                     )
                                 } else {
                                     Text(
