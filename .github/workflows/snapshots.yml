@@ -3,6 +3,9 @@ name: Design snapshots
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   snap:
     runs-on: ubuntu-latest
@@ -20,9 +23,14 @@ jobs:
       - name: Report errors
         if: always()
         run: |
-          grep -E '^e: |FAILED|Exception|What went wrong' -A3 snap.log | head -60 | while IFS= read -r line; do echo "::warning::$line"; done
-      - uses: actions/upload-artifact@v4
+          grep -E '^e: |FAILED|Exception|What went wrong' -A3 snap.log | head -40 | while IFS= read -r line; do echo "::warning::$line"; done
+          for f in app/build/test-results/testDebugUnitTest/*.xml; do grep -E 'Exception|at om\.yousef|at app\.cash' "$f" | head -25 | while IFS= read -r line; do echo "::warning::$line"; done; done
+      - name: Publish images to the snapshots branch
         if: always()
-        with:
-          name: snapshots
-          path: app/src/test/snapshots/images/
+        run: |
+          mkdir -p /tmp/out && cp app/src/test/snapshots/images/*.png /tmp/out/ 2>/dev/null || true
+          cd /tmp/out
+          git init -q -b snapshots
+          git -c user.name=ci -c user.email=ci@example.com add -A
+          git -c user.name=ci -c user.email=ci@example.com commit -q -m "snapshots ${{ github.run_number }}" || exit 0
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" snapshots

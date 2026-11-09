@@ -25,7 +25,7 @@ object AppsRepository {
             Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER),
         )
         for (q in queries) {
-            for (ri in pm.queryIntentActivities(q, 0)) {
+            for (ri in runCatching { pm.queryIntentActivities(q, 0) }.getOrNull().orEmpty()) {
                 val pkg = ri.activityInfo.packageName
                 if (pkg == context.packageName || seen.containsKey(pkg)) continue
                 val banner = runCatching { ri.activityInfo.loadBanner(pm) ?: ri.activityInfo.applicationInfo.loadBanner(pm) }.getOrNull()
