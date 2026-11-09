@@ -52,6 +52,7 @@ object Logos {
                 c.readTimeout = 15_000
                 c.instanceFollowRedirects = true
                 c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android TV) Shashati")
+                c.setRequestProperty("Accept", "image/png,image/jpeg,image/*;q=0.8")
                 val bytes = c.inputStream.use { it.readBytes() }
                 c.disconnect()
                 val src = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return@runCatching null

@@ -37,6 +37,7 @@ fun main(args: Array<String>) {
         val img = runCatching {
             val c = URL(logo).openConnection() as HttpURLConnection
             c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android TV) Shashati")
+            c.setRequestProperty("Accept", "image/png,image/jpeg,image/*;q=0.8")
             c.connectTimeout = 10000; c.readTimeout = 15000
             ImageIO.read(c.inputStream)
         }.getOrNull()

@@ -39,10 +39,7 @@ jobs:
         if: always()
         run: |
           mkdir -p app/build/logo-preview
-          for ua in "Mozilla/5.0 (Linux; Android TV) Shashati" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36" "curl/8"; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" -A "$ua" https://i.imgur.com/CiA3plN.png); echo "::error::imgur [$ua] -> $code"
-          done
-          code=$(curl -s -o /dev/null -w "%{http_code}" "https://wsrv.nl/?url=i.imgur.com/CiA3plN.png"); echo "::error::wsrv -> $code"
+          ct=$(curl -s -o /tmp/x -w "%{content_type}" -H "Accept: image/png,image/*" https://i.imgur.com/CiA3plN.png); echo "::error::imgur type $ct $(file -b /tmp/x | head -c 60)"
           kotlinc tools/LogoSheet.kt app/src/main/java/om/yousef/shashati/data/LogoCleaner.kt -include-runtime -d sheet.jar 2>&1 | grep -v warning | head -20
           java -jar sheet.jar channels.json app/build/logo-preview/logos.png
       - name: Publish images to the snapshots branch
