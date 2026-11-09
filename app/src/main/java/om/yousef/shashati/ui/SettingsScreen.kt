@@ -58,7 +58,7 @@ import java.time.LocalDate
 
 private val SECTIONS = listOf(
     "الشاشة الرئيسية",
-    "بطاقات المفضلة",
+    "بطاقات الرئيسية",
     "موقع وأوقات الصلاة",
     "الأذان والإقامة",
     "شاشة التوقف",
@@ -173,7 +173,7 @@ private fun HomeSection(onChanged: () -> Unit) {
         ToggleRow("شريط أوقات الصلاة", "الصلوات الخمس في الشاشة الرئيسية", bar) {
             bar = !bar; Prefs.showPrayerBar = bar; onChanged()
         }
-        ToggleRow("بطاقة الصلاة القادمة", "اسم الصلاة ووقتها والعد التنازلي", card) {
+        ToggleRow("العد التنازلي للصلاة القادمة", "داخل شريط الصلاة أسفل الشاشة", card) {
             card = !card; Prefs.showNextCard = card; onChanged()
         }
     }
@@ -199,21 +199,22 @@ private fun SmallButton(text: String, danger: Boolean = false, onClick: () -> Un
 private fun FavoritesSection(onChanged: () -> Unit) {
     val context = LocalContext.current
     val installed = remember { AppsRepository.installed(context) }
-    var favs by remember { mutableStateOf(AppsRepository.favorites(context)) }
-    var picking by remember { mutableIntStateOf(-2) } // -2 none, -1 add, >=0 replace index
+    val allChannels = remember { om.yousef.shashati.data.ChannelRepository.load(context).channels }
+    var chIds by remember { mutableStateOf(om.yousef.shashati.data.HomeTiles.channels(context).map { it.id }) }
+    var appIds by remember { mutableStateOf(om.yousef.shashati.data.HomeTiles.apps(context).map { it.packageName }) }
+    // what is being replaced: "ch" or "app" with the slot index
+    var picking by remember { mutableStateOf<Pair<String, Int>?>(null) }
 
-    fun save(list: List<String>) {
-        favs = list
-        AppsRepository.saveFavorites(list)
-        onChanged()
-    }
+    fun chName(id: String) = allChannels.firstOrNull { it.id == id }?.name ?: id
+    fun appName(p: String) = installed.firstOrNull { it.packageName == p }?.label ?: p
 
-    fun label(p: String) = if (p == AppsRepository.CHANNELS) "القنوات" else installed.firstOrNull { it.packageName == p }?.label ?: p
-
-    if (picking != -2) {
+    val pick = picking
+    if (pick != null) {
+        val (kind, slot) = pick
+        val options: List<Pair<String, String>> =
+            if (kind == "ch") allChannels.map { it.id to it.name } else installed.map { it.packageName to it.label }
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SectionHeader(if (picking == -1) "اختر تطبيقًا لإضافته" else "اختر بديلًا لـ «${label(favs[picking])}»")
-            val options = listOf(AppsRepository.CHANNELS) + installed.map { it.packageName }
+            SectionHeader(if (kind == "ch") "اختر القناة رقم ${slot + 1}" else "اختر التطبيق رقم ${slot + 1}")
             val firstOption = remember { FocusRequester() }
             LaunchedEffect(Unit) {
                 delay(100)
@@ -226,45 +227,62 @@ private fun FavoritesSection(onChanged: () -> Unit) {
                 contentPadding = PaddingValues(4.dp)
             ) {
                 items(options.size) { idx ->
-                    val p = options[idx]
+                    val (id, name) = options[idx]
                     Focusable(modifier = Modifier.fillMaxWidth().height(44.dp), focusRequester = if (idx == 0) firstOption else null, onClick = {
-                        val list = favs.toMutableList()
-                        if (picking == -1) { if (p !in list) list.add(p) } else list[picking] = p
-                        picking = -2
-                        save(list)
+                        if (kind == "ch") {
+                            val l = chIds.toMutableList()
+                            if (slot < l.size) l[slot] = id else l.add(id)
+                            chIds = l.distinct()
+                            om.yousef.shashati.data.HomeTiles.saveChannels(chIds)
+                        } else {
+                            val l = appIds.toMutableList()
+                            if (slot < l.size) l[slot] = id else l.add(id)
+                            appIds = l.distinct()
+                            om.yousef.shashati.data.HomeTiles.saveApps(appIds)
+                        }
+                        picking = null
+                        onChanged()
                     }) {
                         Text(
-                            label(p), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            name, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.align(Alignment.Center).padding(horizontal = 10.dp)
                         )
                     }
                 }
             }
         }
-        BackHandler { picking = -2 }
+        BackHandler { picking = null }
         return
     }
 
-    Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            SectionHeader("بطاقات المفضلة")
-            Pill("+ إضافة بطاقة", selected = true, fontSize = 13, hPad = 16.dp) { picking = -1 }
-        }
-        Text("الترتيب هنا هو ترتيب البطاقات في الشاشة الرئيسية", fontSize = 12.sp, color = C.dim)
-        favs.forEachIndexed { i, p ->
+    @Composable
+    fun slots(kind: String, ids: List<String>, name: (String) -> String, save: (List<String>) -> Unit) {
+        for (i in 0 until om.yousef.shashati.data.HomeTiles.SLOTS) {
+            val id = ids.getOrNull(i)
             Row(
-                Modifier.fillMaxWidth().background(Color(0x0FFFFFFF), RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 8.dp),
+                Modifier.fillMaxWidth().background(Color(0x0FFFFFFF), RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text("${i + 1}", fontSize = 13.sp, color = C.faint, modifier = Modifier.width(20.dp))
-                Text(label(p), fontSize = 15.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                SmallButton("▲") { if (i > 0) save(favs.toMutableList().apply { add(i - 1, removeAt(i)) }) }
-                SmallButton("▼") { if (i < favs.size - 1) save(favs.toMutableList().apply { add(i + 1, removeAt(i)) }) }
-                SmallButton("استبدال") { picking = i }
-                SmallButton("حذف", danger = true) { save(favs.toMutableList().apply { removeAt(i) }) }
+                Text(id?.let(name) ?: "فارغ", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = if (id == null) C.faint else Color.White,
+                    modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (id != null) {
+                    SmallButton("▲") { if (i > 0) save(ids.toMutableList().apply { add(i - 1, removeAt(i)) }) }
+                    SmallButton("▼") { if (i < ids.size - 1) save(ids.toMutableList().apply { add(i + 1, removeAt(i)) }) }
+                }
+                SmallButton(if (id == null) "اختيار" else "استبدال") { picking = kind to i }
             }
         }
+    }
+
+    Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SectionHeader("بطاقات الشاشة الرئيسية")
+        Text("الترتيب من اليمين. بطاقتا «جميع القنوات» و«جميع التطبيقات» ثابتتان على اليسار.", fontSize = 12.sp, color = C.dim)
+        Text("صف القنوات", fontSize = 14.sp, color = C.gold, modifier = Modifier.padding(top = 4.dp))
+        slots("ch", chIds, ::chName) { chIds = it; om.yousef.shashati.data.HomeTiles.saveChannels(it); onChanged() }
+        Text("صف التطبيقات", fontSize = 14.sp, color = C.gold, modifier = Modifier.padding(top = 6.dp))
+        slots("app", appIds, ::appName) { appIds = it; om.yousef.shashati.data.HomeTiles.saveApps(it); onChanged() }
     }
 }
 

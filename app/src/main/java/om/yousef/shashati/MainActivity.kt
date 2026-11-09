@@ -41,7 +41,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 
 class MainActivity : ComponentActivity() {
-    private enum class Screen { Home, Channels, Settings, Kahf, Adhkar, SaverPreview, Kids, Lock }
+    private enum class Screen { Home, Channels, Apps, Settings, Kahf, Adhkar, SaverPreview, Kids, Lock }
 
     private var screen by mutableStateOf(Screen.Home)
     private var settingsSection by mutableIntStateOf(0)
@@ -63,6 +63,8 @@ class MainActivity : ComponentActivity() {
                             onOpenChannels = { screen = Screen.Channels },
                             onOpenSettings = { s -> settingsSection = s; screen = Screen.Settings },
                             onLaunchApp = { pkg -> AppsRepository.launch(this, pkg) },
+                            onOpenAllApps = { screen = Screen.Apps },
+                            onPlayChannel = { list, i -> startActivity(PlayerActivity.intent(this, list, i)) },
                             onOpenKahf = { screen = Screen.Kahf },
                             onOpenAdhkar = { m -> adhkarMorning = m; screen = Screen.Adhkar }
                         )
@@ -74,6 +76,10 @@ class MainActivity : ComponentActivity() {
                             onBack = { screen = Screen.Home },
                             onPlay = { list, i -> startActivity(PlayerActivity.intent(this, list, i)) }
                         )
+                    }
+                    Screen.Apps -> {
+                        BackHandler { screen = Screen.Home }
+                        om.yousef.shashati.ui.AllAppsScreen(onLaunch = { pkg -> AppsRepository.launch(this, pkg) })
                     }
                     Screen.Kahf -> KahfScreen(onBack = { screen = Screen.Home })
                     Screen.Adhkar -> {

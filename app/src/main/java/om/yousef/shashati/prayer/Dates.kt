@@ -18,6 +18,8 @@ object Dates {
 
     fun gregorian(d: LocalDate) = "${days[d.dayOfWeek.value - 1]} ${d.dayOfMonth} ${gregMonths[d.monthValue - 1]}"
 
+    fun gregorianFull(d: LocalDate) = "${gregorian(d)} ${d.year}"
+
     fun hijri(d: LocalDate): String = runCatching {
         val cal = IslamicCalendar()
         cal.calculationType = IslamicCalendar.CalculationType.ISLAMIC_UMALQURA
@@ -36,6 +38,18 @@ object Dates {
     }
 
     fun greeting(t: LocalTime) = if (t.hour in 4..11) "صباح الخير" else "مساء الخير"
+
+    /** "4 ساعة و 3 دقائق" style text without the leading "بعد". */
+    fun duration(totalMinutes: Long): String {
+        val m = totalMinutes.coerceAtLeast(0)
+        if (m < 1) return "الآن"
+        fun mins(x: Long) = when { x == 1L -> "دقيقة"; x == 2L -> "دقيقتان"; x in 3..10 -> "$x دقائق"; else -> "$x دقيقة" }
+        if (m < 60) return mins(m)
+        val h = m / 60
+        val r = m % 60
+        val hours = when (h) { 1L -> "ساعة"; 2L -> "ساعتان"; in 3..10 -> "$h ساعات"; else -> "$h ساعة" }
+        return if (r == 0L) hours else "$hours و ${mins(r)}"
+    }
 
     private val adhkar = listOf(
         "سبحان الله وبحمده، سبحان الله العظيم",

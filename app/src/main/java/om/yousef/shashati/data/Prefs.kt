@@ -110,6 +110,12 @@ object Prefs {
     var channelFavs by str("channelFavs")
     /** Phones paired with this TV's remote service (token -> phone name, one per line as token|name). */
     var remoteTokensRaw by str("remoteTokens")
+
+    // Home screen rows (pipe-separated ids) and weather cache
+    var homeChannelsRaw by str("homeChannels")
+    var homeAppsRaw by str("homeApps")
+    var weatherJson by str("weatherJson")
+    var weatherAt by long("weatherAt", 0L)
     var prayerCache by str("prayerCache")
     var prayerFetchedDay by str("prayerFetchedDay")
 
