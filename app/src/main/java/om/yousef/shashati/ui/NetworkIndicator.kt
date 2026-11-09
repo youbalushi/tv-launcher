@@ -23,7 +23,8 @@ import androidx.compose.ui.unit.dp
 
 private enum class Net { WIFI, ETHERNET, NONE }
 
-private fun current(cm: ConnectivityManager): Net {
+private fun current(cm: ConnectivityManager?): Net {
+    cm ?: return Net.WIFI
     val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return Net.NONE
     if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) return Net.NONE
     return when {
@@ -36,7 +37,7 @@ private fun current(cm: ConnectivityManager): Net {
 @Composable
 fun NetworkIndicator(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val cm = remember { context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager }
+    val cm = remember { context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager }
     var state by remember { mutableStateOf(current(cm)) }
     DisposableEffect(Unit) {
         val cb = object : ConnectivityManager.NetworkCallback() {
@@ -44,8 +45,8 @@ fun NetworkIndicator(modifier: Modifier = Modifier) {
             override fun onLost(network: Network) { state = current(cm) }
             override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) { state = current(cm) }
         }
-        runCatching { cm.registerDefaultNetworkCallback(cb) }
-        onDispose { runCatching { cm.unregisterNetworkCallback(cb) } }
+        runCatching { cm?.registerDefaultNetworkCallback(cb) }
+        onDispose { runCatching { cm?.unregisterNetworkCallback(cb) } }
     }
 
     val offline = state == Net.NONE
