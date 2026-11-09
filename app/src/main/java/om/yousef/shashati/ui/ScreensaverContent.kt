@@ -228,20 +228,22 @@ private fun DrawScope.drawNightScene(stars: List<Star>, twinkle: Float, ripple: 
     // mosque (right side)
     drawMosque(w, h, horizon)
 
-    // reflections of the lit mosque on the water
+    // reflections of the lit mosque on the water: short broken gold strokes that shimmer
     val gold = Color(0xFFFFC77A)
-    for (k in 0 until 26) {
-        val x = w * (0.66f + k * 0.0125f)
-        val len = h * (0.06f + ((k * 37) % 11) / 11f * 0.16f)
-        val y0 = horizon + h * 0.012f + ((k * 13) % 5) * h * 0.004f
-        val a = 0.18f + 0.3f * ((kotlin.math.sin(ripple * 6.28f + k) + 1f) / 2f)
-        drawRect(gold.copy(alpha = a), Offset(x, y0), Size(w * 0.0035f, len))
+    val rr = Random(5)
+    repeat(140) { k ->
+        val x = w * (0.64f + rr.nextFloat() * 0.36f)
+        val depth = rr.nextFloat()
+        val y = horizon + h * 0.01f + depth * depth * h * 0.26f
+        val len = w * (0.004f + rr.nextFloat() * 0.018f) * (1f - depth * 0.6f)
+        val a = (0.08f + 0.32f * ((kotlin.math.sin(ripple * 6.28f + k * 0.7f) + 1f) / 2f)) * (1f - depth * 0.8f)
+        drawRect(gold.copy(alpha = a), Offset(x - len / 2, y), Size(len, h * 0.0025f))
     }
-    drawRect(Brush.verticalGradient(listOf(Color(0x33FFC77A), Color.Transparent), horizon, horizon + h * 0.22f), Offset(w * 0.64f, horizon), Size(w * 0.36f, h * 0.22f))
+    drawRect(Brush.verticalGradient(listOf(Color(0x40FFC77A), Color.Transparent), horizon, horizon + h * 0.18f), Offset(w * 0.64f, horizon), Size(w * 0.36f, h * 0.18f))
     // left shore lights reflection
-    for (k in 0 until 14) {
-        val x = w * (0.01f + k * 0.022f)
-        drawRect(gold.copy(alpha = 0.18f), Offset(x, horizon + h * 0.006f), Size(w * 0.0025f, h * (0.02f + (k % 4) * 0.012f)))
+    repeat(40) {
+        val x = rr.nextFloat() * w * 0.32f
+        drawRect(gold.copy(alpha = 0.12f + rr.nextFloat() * 0.15f), Offset(x, horizon + h * (0.004f + rr.nextFloat() * 0.03f)), Size(w * 0.006f, h * 0.002f))
     }
     // soft vignette
     drawRect(Brush.verticalGradient(listOf(Color(0x33000000), Color.Transparent, Color.Transparent, Color(0x55000000))))
