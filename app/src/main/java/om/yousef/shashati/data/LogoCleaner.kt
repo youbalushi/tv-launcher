@@ -104,7 +104,7 @@ object LogoCleaner {
             if (y > 0.85f) bright++
         }
         // Only for logos that are mostly dark lettering, not dark text sitting on a white box.
-        if (visible == 0 || dark < visible * 0.2f || bright > visible * 0.25f) return
+        if (visible == 0 || dark < visible * 0.2f || dark < bright * 1.5f) return
         for (i in px.indices) {
             val c = px[i]
             if (a(c) == 0) continue
