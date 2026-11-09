@@ -31,7 +31,18 @@ object Logos {
         return Bitmap.createBitmap(out.px, out.w, out.h, Bitmap.Config.ARGB_8888)
     }
 
+    /**
+     * Logos the owner copies to the TV from the laptop (Desktop\\Claude\\logos → shashati_logos.bat).
+     * Named <channel id>.png or <app package>.png, shown exactly as they are.
+     */
+    fun userLogo(context: Context, id: String): ImageBitmap? {
+        val f = File(context.getExternalFilesDir("logos") ?: return null, "$id.png")
+        if (!f.exists()) return null
+        return runCatching { BitmapFactory.decodeFile(f.path)?.asImageBitmap() }.getOrNull()
+    }
+
     fun cachedChannel(context: Context, ch: Channel): ImageBitmap? {
+        userLogo(context, ch.id)?.let { return it }
         val key = "ch_${ch.id}"
         synchronized(mem) { if (mem.containsKey(key)) return mem[key] }
         val f = File(dir(context), "$key-v$VERSION.png")
@@ -71,7 +82,8 @@ object Logos {
     }
 
     /** The app's own banner (or icon) with the background taken away. */
-    fun app(app: InstalledApp): ImageBitmap? {
+    fun app(context: Context, app: InstalledApp): ImageBitmap? {
+        userLogo(context, app.packageName)?.let { return it }
         val key = "app_${app.packageName}"
         synchronized(mem) { if (mem.containsKey(key)) return mem[key] }
         val bmp = runCatching {

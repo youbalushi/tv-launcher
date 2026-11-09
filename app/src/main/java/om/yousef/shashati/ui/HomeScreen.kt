@@ -231,7 +231,7 @@ fun HomeScreen(
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth().height(68.dp), horizontalArrangement = Arrangement.spacedBy(11.dp)) {
                 channels.forEachIndexed { i, ch ->
-                    ChannelTile(ch, Modifier.weight(1f).fillMaxHeight(), if (i == 2) firstFocus else null) {
+                    ChannelTile(ch, version, Modifier.weight(1f).fillMaxHeight(), if (i == 2) firstFocus else null) {
                         val group = allChannels.filter { it.category == ch.category }
                         onPlayChannel(group, group.indexOfFirst { it.id == ch.id }.coerceAtLeast(0))
                     }
@@ -246,7 +246,7 @@ fun HomeScreen(
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth().height(64.dp), horizontalArrangement = Arrangement.spacedBy(11.dp)) {
                 apps.forEach { app ->
-                    AppTile(app, Modifier.weight(1f).fillMaxHeight()) { onLaunchApp(app.packageName) }
+                    AppTile(app, version, Modifier.weight(1f).fillMaxHeight()) { onLaunchApp(app.packageName) }
                 }
                 repeat(HomeTiles.SLOTS - apps.size) { Spacer(Modifier.weight(1f)) }
                 AllTile(Glyph.Grid, "جميع التطبيقات", Modifier.weight(1f).fillMaxHeight(), onOpenAllApps)
@@ -285,9 +285,9 @@ private fun Long.toColor() = Color(this.toInt() or 0xFF000000.toInt())
 private fun lighter(c: Color, f: Float) = Color(c.red + (1 - c.red) * f, c.green + (1 - c.green) * f, c.blue + (1 - c.blue) * f, 1f)
 
 @Composable
-private fun ChannelTile(ch: Channel, modifier: Modifier, requester: FocusRequester?, onClick: () -> Unit) {
+private fun ChannelTile(ch: Channel, version: Int, modifier: Modifier, requester: FocusRequester?, onClick: () -> Unit) {
     val context = LocalContext.current
-    var logo by remember(ch.id) { mutableStateOf(om.yousef.shashati.data.Logos.cachedChannel(context, ch)) }
+    var logo by remember(ch.id, version) { mutableStateOf(om.yousef.shashati.data.Logos.cachedChannel(context, ch)) }
     LaunchedEffect(ch.id) { if (logo == null) logo = om.yousef.shashati.data.Logos.channel(context, ch) }
     GlowTile(modifier, focusRequester = requester, background = glassBrush, onClick = onClick) {
         LogoOrName(logo, ch.name)
@@ -300,7 +300,7 @@ private fun BoxScope.LogoOrName(logo: ImageBitmap?, name: String) {
     if (logo != null) {
         Image(
             logo, name,
-            Modifier.align(Alignment.Center).fillMaxWidth(0.72f).fillMaxHeight(0.6f),
+            Modifier.align(Alignment.Center).fillMaxWidth(0.74f).fillMaxHeight(0.68f),
             contentScale = ContentScale.Fit
         )
     } else {
@@ -324,8 +324,9 @@ private fun AllTile(g: Glyph, title: String, modifier: Modifier, onClick: () -> 
 }
 
 @Composable
-private fun AppTile(app: InstalledApp, modifier: Modifier, onClick: () -> Unit) {
-    val logo = remember(app.packageName) { om.yousef.shashati.data.Logos.app(app) }
+private fun AppTile(app: InstalledApp, version: Int, modifier: Modifier, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val logo = remember(app.packageName, version) { om.yousef.shashati.data.Logos.app(context, app) }
     GlowTile(modifier, background = glassBrush, onClick = onClick) {
         LogoOrName(logo, app.label)
     }
