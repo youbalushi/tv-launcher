@@ -1,0 +1,28 @@
+name: Design snapshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  snap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Record
+        run: gradle :app:recordPaparazziDebug --no-daemon --stacktrace 2>&1 | tee snap.log
+      - name: Report errors
+        if: always()
+        run: |
+          grep -E '^e: |FAILED|Exception|What went wrong' -A3 snap.log | head -60 | while IFS= read -r line; do echo "::warning::$line"; done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: snapshots
+          path: app/src/test/snapshots/images/
