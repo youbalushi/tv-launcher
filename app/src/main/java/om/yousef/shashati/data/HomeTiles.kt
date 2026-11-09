@@ -27,7 +27,8 @@ object HomeTiles {
     fun apps(context: Context): List<InstalledApp> {
         val installed = AppsRepository.installed(context)
         val saved = Prefs.homeAppsRaw?.split("|")?.filter { it.isNotBlank() }
-        val ids = saved ?: (designApps + AppsRepository.favorites(context) + installed.map { it.packageName })
+        val favs = Prefs.favoritesRaw?.split("|").orEmpty()
+        val ids = saved ?: (designApps + favs + installed.map { it.packageName })
         return ids.distinct().mapNotNull { p -> installed.firstOrNull { it.packageName == p } }.take(SLOTS)
     }
 
