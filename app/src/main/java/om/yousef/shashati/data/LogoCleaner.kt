@@ -97,10 +97,10 @@ object LogoCleaner {
         var bright = 0
         var visible = 0
         for (c in px) {
-            if (a(c) < 200) continue
+            if (a(c) < 128) continue
             visible++
             val y = luma(c)
-            if (y < 0.27f) dark++
+            if (y < 0.36f) dark++
             if (y > 0.85f) bright++
         }
         // Only for logos that are mostly dark lettering, not dark text sitting on a white box.
@@ -109,12 +109,13 @@ object LogoCleaner {
             val c = px[i]
             if (a(c) == 0) continue
             val y = luma(c)
-            if (y >= 0.33f) continue
+            if (y >= 0.42f) continue
             val hsl = toHsl(r(c), g(c), b(c))
-            // smooth: the darker the pixel, the lighter it becomes
-            val t = ((0.33f - y) / 0.33f).coerceIn(0f, 1f)
-            val l = hsl[2] + (0.9f - hsl[2]) * t
-            val sat = hsl[1] * (1f - 0.35f * t)
+            // dark becomes light (keeping the hue); fades out near the threshold
+            val t = ((0.42f - y) / 0.12f).coerceIn(0f, 1f)
+            val target = 0.9f - hsl[2] * 0.3f
+            val l = hsl[2] + (target - hsl[2]) * t
+            val sat = hsl[1] * (1f - 0.3f * t)
             val rgb = fromHsl(hsl[0], sat, l)
             px[i] = (a(c) shl 24) or (rgb[0] shl 16) or (rgb[1] shl 8) or rgb[2]
         }
