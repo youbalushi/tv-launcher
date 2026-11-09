@@ -112,7 +112,7 @@ fun GlowTile(
     }
 }
 
-private val glassBrush = Brush.linearGradient(listOf(Color(0x40A6BEE6), Color(0x2A27467A)))
+private val glassBrush = Brush.linearGradient(listOf(Color(0x30FFFFFF), Color(0x10FFFFFF)))
 
 @Composable
 fun HomeScreen(
@@ -144,7 +144,7 @@ fun HomeScreen(
 
     val channels = remember(version) { HomeTiles.channels(context) }
     val allChannels = remember(version) { om.yousef.shashati.data.ChannelRepository.load(context).channels }
-    val apps = remember(version) { HomeTiles.apps(context).map { it to it.banner?.let { b -> runCatching { b.toBitmap(320, 180).asImageBitmap() }.getOrNull() } } }
+    val apps = remember(version) { HomeTiles.apps(context) }
 
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) {
@@ -245,8 +245,8 @@ fun HomeScreen(
             SectionHead(Glyph.Grid, "التطبيقات")
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth().height(64.dp), horizontalArrangement = Arrangement.spacedBy(11.dp)) {
-                apps.forEach { (app, banner) ->
-                    AppTile(app, banner, Modifier.weight(1f).fillMaxHeight()) { onLaunchApp(app.packageName) }
+                apps.forEach { app ->
+                    AppTile(app, Modifier.weight(1f).fillMaxHeight()) { onLaunchApp(app.packageName) }
                 }
                 repeat(HomeTiles.SLOTS - apps.size) { Spacer(Modifier.weight(1f)) }
                 AllTile(Glyph.Grid, "جميع التطبيقات", Modifier.weight(1f).fillMaxHeight(), onOpenAllApps)
@@ -286,23 +286,35 @@ private fun lighter(c: Color, f: Float) = Color(c.red + (1 - c.red) * f, c.green
 
 @Composable
 private fun ChannelTile(ch: Channel, modifier: Modifier, requester: FocusRequester?, onClick: () -> Unit) {
-    val base = ch.color.toColor()
-    GlowTile(
-        modifier, focusRequester = requester,
-        background = Brush.linearGradient(listOf(lighter(base, 0.28f), base)),
-        onClick = onClick
-    ) {
+    val context = LocalContext.current
+    var logo by remember(ch.id) { mutableStateOf(om.yousef.shashati.data.Logos.cachedChannel(context, ch)) }
+    LaunchedEffect(ch.id) { if (logo == null) logo = om.yousef.shashati.data.Logos.channel(context, ch) }
+    GlowTile(modifier, focusRequester = requester, background = glassBrush, onClick = onClick) {
+        LogoOrName(logo, ch.name)
+    }
+}
+
+/** The logo in its own colours, centred on the glass; the name in white if there is no logo. */
+@Composable
+private fun BoxScope.LogoOrName(logo: ImageBitmap?, name: String) {
+    if (logo != null) {
+        Image(
+            logo, name,
+            Modifier.align(Alignment.Center).fillMaxWidth(0.72f).fillMaxHeight(0.6f),
+            contentScale = ContentScale.Fit
+        )
+    } else {
         Text(
-            ch.name, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+            name, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
             maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 20.sp,
-            modifier = Modifier.padding(horizontal = 10.dp)
+            modifier = Modifier.align(Alignment.Center).padding(horizontal = 10.dp)
         )
     }
 }
 
 @Composable
 private fun AllTile(g: Glyph, title: String, modifier: Modifier, onClick: () -> Unit) {
-    GlowTile(modifier, background = Brush.linearGradient(listOf(Color(0x806F8DBA), Color(0x8C1B3460))), onClick = onClick) {
+    GlowTile(modifier, background = glassBrush, onClick = onClick) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             LineGlyph(g, Modifier.size(22.dp))
             Spacer(Modifier.height(4.dp))
@@ -311,44 +323,11 @@ private fun AllTile(g: Glyph, title: String, modifier: Modifier, onClick: () -> 
     }
 }
 
-/** Design colours and icons for the TV's built-in apps; other apps show their own banner. */
-private data class AppStyle(val title: String, val glyph: Glyph, val from: Color, val to: Color)
-
-private val appStyles = mapOf(
-    "com.xiaomi.mitv.smartshare" to AppStyle("MIRACAST", Glyph.Cast, Color(0xFF12C3D6), Color(0xFF00809F)),
-    "com.xiaomi.mitv.mediaexplorer" to AppStyle("MEDIA\nPLAYER", Glyph.Play, Color(0xFF6E86FF), Color(0xFF2B2FCF)),
-    "com.mitv.gallery" to AppStyle("GALLERY", Glyph.Photo, Color(0xFFFFC51A), Color(0xFFE08600)),
-    "com.mitv.livetv" to AppStyle("LIVE TV", Glyph.LiveTv, Color(0xFF14BCF7), Color(0xFF005DE6)),
-)
-
 @Composable
-private fun AppTile(app: InstalledApp, banner: ImageBitmap?, modifier: Modifier, onClick: () -> Unit) {
-    val style = appStyles[app.packageName]
-    if (style != null) {
-        GlowTile(modifier, background = Brush.linearGradient(listOf(style.from, style.to)), onClick = onClick) {
-            if (style.glyph == Glyph.Cast) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    LineGlyph(style.glyph, Modifier.size(24.dp))
-                    Spacer(Modifier.height(3.dp))
-                    Text(style.title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp)
-                }
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // LTR look: icon then the English name
-                    Text(style.title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp, letterSpacing = 0.5.sp)
-                    Spacer(Modifier.width(10.dp))
-                    LineGlyph(style.glyph, Modifier.size(28.dp))
-                }
-            }
-        }
-        return
-    }
+private fun AppTile(app: InstalledApp, modifier: Modifier, onClick: () -> Unit) {
+    val logo = remember(app.packageName) { om.yousef.shashati.data.Logos.app(app) }
     GlowTile(modifier, background = glassBrush, onClick = onClick) {
-        if (banner != null) {
-            Image(banner, app.label, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        } else {
-            Text(app.label, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(8.dp))
-        }
+        LogoOrName(logo, app.label)
     }
 }
 

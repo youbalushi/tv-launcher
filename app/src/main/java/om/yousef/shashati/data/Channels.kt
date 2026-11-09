@@ -15,6 +15,7 @@ data class Channel(
     val color: Long,
     val urls: List<String>,
     val headers: Map<String, String>,
+    val logo: String? = null,
 )
 
 data class Category(val id: String, val name: String)
@@ -83,7 +84,7 @@ object ChannelRepository {
             val color = runCatching {
                 java.lang.Long.parseLong(o.optString("color", "#2A4F7A").removePrefix("#"), 16) or 0xFF000000
             }.getOrDefault(0xFF2A4F7A)
-            Channel(o.getString("id"), o.getString("name"), o.optString("category"), color, urls, headers)
+            Channel(o.getString("id"), o.getString("name"), o.optString("category"), color, urls, headers, o.optString("logo").ifBlank { null })
         }
         return ChannelList(categories, channels)
     }
