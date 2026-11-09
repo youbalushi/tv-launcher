@@ -177,7 +177,7 @@ fun HomeScreen(
 
         Column(Modifier.fillMaxSize().padding(start = 38.dp, end = 38.dp, top = 14.dp, bottom = 30.dp)) {
             // ---------- Top: clock block (right) and tools + weather (left) ----------
-            Row(Modifier.fillMaxWidth().height(176.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+            Row(Modifier.fillMaxWidth().height(192.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 Column(horizontalAlignment = Alignment.Start) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.width(2.5.dp).height(15.dp).background(C.gold, RoundedCornerShape(2.dp)))

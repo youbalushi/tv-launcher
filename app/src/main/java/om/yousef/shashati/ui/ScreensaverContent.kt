@@ -11,14 +11,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,29 +33,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import om.yousef.shashati.data.Locations
 import om.yousef.shashati.data.Prefs
 import om.yousef.shashati.prayer.Dates
 import om.yousef.shashati.prayer.PRAYER_NAMES
 import om.yousef.shashati.prayer.PrayerRepository
-import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.random.Random
 
 private data class Star(val x: Float, val y: Float, val r: Float, val phase: Float)
 
-/** The Islamic screensaver: mosque silhouette, night or sunset sky, clock, dates, dhikr and prayer times. */
+/**
+ * Screensaver from the approved design: night sky, crescent, a lit mosque by the water,
+ * big clock and dates, and the prayer bar with the next prayer highlighted.
+ * The scene is drawn in code until the final artwork arrives.
+ */
 @Composable
 fun ScreensaverContent() {
     var now by remember { mutableStateOf(LocalDateTime.now()) }
@@ -61,146 +70,262 @@ fun ScreensaverContent() {
             delay(1000)
         }
     }
-    val night = Prefs.saverNight
     val stars = remember {
-        val rnd = Random(7)
-        List(70) { Star(rnd.nextFloat(), rnd.nextFloat() * 0.55f, 0.6f + rnd.nextFloat() * 1.2f, rnd.nextFloat() * 6.28f) }
+        val rnd = Random(11)
+        List(110) { Star(rnd.nextFloat(), rnd.nextFloat() * 0.5f, 0.4f + rnd.nextFloat() * 1.1f, rnd.nextFloat() * 6.28f) }
     }
     val anim = rememberInfiniteTransition(label = "saver")
-    val twinkle by anim.animateFloat(0f, 6.28f, infiniteRepeatable(tween(6000, easing = LinearEasing)), label = "tw")
-    val drift by anim.animateFloat(-1f, 1f, infiniteRepeatable(tween(40000), RepeatMode.Reverse), label = "drift")
+    val twinkle by anim.animateFloat(0f, 6.28f, infiniteRepeatable(tween(7000, easing = LinearEasing)), label = "tw")
+    val ripple by anim.animateFloat(0f, 1f, infiniteRepeatable(tween(4000, easing = LinearEasing), RepeatMode.Reverse), label = "rp")
 
-    // Move the text block slightly every minute so nothing stays burnt into the screen.
-    val shift = remember(now.minute) { Offset((now.minute % 5 - 2) * 6f, (now.minute % 3 - 1) * 6f) }
+    // Move the text a little every minute so nothing stays burnt into the screen.
+    val shiftX = (now.minute % 5 - 2) * 3
+    val shiftY = (now.minute % 3 - 1) * 3
 
     val (next, today) = remember(now.withSecond(0).withNano(0)) {
         PrayerRepository.next(now) to PrayerRepository.timesFor(now.toLocalDate())
     }
+    val nextToday = next.time.toLocalDate() == now.toLocalDate()
 
-    Box(
-        Modifier.fillMaxSize().background(
-            if (night) Brush.verticalGradient(listOf(Color(0xFF050913), Color(0xFF0C1830), Color(0xFF1A2C4C)))
-            else Brush.verticalGradient(listOf(Color(0xFF1C1433), Color(0xFF5A2F4A), Color(0xFFC4683A), Color(0xFFEDA45A)))
-        )
-    ) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Color(0xFF0A1638))) {
+        val H = maxHeight
         Canvas(Modifier.fillMaxSize()) {
-            val w = size.width
-            val h = size.height
-            val glowColor = if (night) Color(0x405A8CDC) else Color(0x73FFC878)
-            drawRect(Brush.radialGradient(listOf(glowColor, Color.Transparent), Offset(w * (0.5f + drift * 0.04f), h * 0.86f), w * 0.36f))
-            if (night) {
-                stars.forEach { s ->
-                    val a = 0.25f + 0.75f * ((kotlin.math.sin(twinkle + s.phase) + 1f) / 2f)
-                    drawCircle(Color.White.copy(alpha = a), radius = s.r * density, center = Offset(s.x * w, s.y * h))
-                }
-            }
-            drawMosque(night)
+            drawNightScene(stars, twinkle, ripple)
         }
 
         Column(
-            Modifier.fillMaxSize().padding(top = 44.dp).offset(shift.x.dp, shift.y.dp),
+            Modifier.fillMaxSize().offset(shiftX.dp, shiftY.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(Locations.current().name, fontSize = 15.sp, color = C.dim)
-            Text(Dates.time12(now.toLocalTime()), fontSize = 104.sp, fontWeight = FontWeight.ExtraLight, lineHeight = 108.sp)
+            Spacer(Modifier.height(H * 0.065f))
+            // "وضع السكون" with lines either side
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.width(60.dp).height(1.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, Color(0x99FFFFFF)))))
+                Spacer(Modifier.width(14.dp))
+                Text("وضع السكون", fontSize = 14.sp, color = Color(0xEEFFFFFF))
+                Spacer(Modifier.width(7.dp))
+                LineGlyph(Glyph.Moon, Modifier.size(17.dp))
+                Spacer(Modifier.width(14.dp))
+                Box(Modifier.width(60.dp).height(1.dp).background(Brush.horizontalGradient(listOf(Color(0x99FFFFFF), Color.Transparent))))
+            }
+            Spacer(Modifier.height(H * 0.035f))
+            Text(Dates.time12(now.toLocalTime()), fontSize = 108.sp, fontWeight = FontWeight.Normal, lineHeight = 112.sp, letterSpacing = 2.sp)
+            Spacer(Modifier.height(H * 0.015f))
             Text(
-                Dates.gregorian(now.toLocalDate()) + if (Prefs.saverHijri) "  ·  " + Dates.hijri(now.toLocalDate()) else "",
-                fontSize = 17.sp, color = Color(0xD9FFFFFF)
+                Dates.gregorian(now.toLocalDate()) + if (Prefs.saverHijri) "، " + Dates.hijri(now.toLocalDate()) + " هـ" else "",
+                fontSize = 19.sp, color = Color(0xF2FFFFFF)
             )
             if (Prefs.saverDhikr) {
-                Text(
-                    Dates.dhikr(now.toLocalDate()), fontFamily = Amiri, fontSize = 26.sp, lineHeight = 40.sp,
-                    textAlign = TextAlign.Center, modifier = Modifier.padding(top = 14.dp).widthIn(max = 720.dp)
-                )
+                Text("الحمد لله رب العالمين", fontSize = 15.sp, color = Color(0xCCFFDFA0), modifier = Modifier.padding(top = 6.dp))
             }
+
+            Spacer(Modifier.weight(1f))
+
             if (Prefs.saverPrayers) {
-                Row(Modifier.padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                val bar = RoundedCornerShape(20.dp)
+                Row(
+                    Modifier.width(560.dp).height(80.dp)
+                        .background(Brush.verticalGradient(listOf(Color(0x40B4C6EE), Color(0x2A2B3F7C))), bar)
+                        .border(1.dp, Color(0x40FFFFFF), bar)
+                        .padding(5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val nextIdx = if (nextToday) next.index else 0
                     for (i in 0 until 5) {
-                        val isNext = next.index == i && next.time.toLocalDate() == now.toLocalDate()
-                        Column(
-                            Modifier
-                                .background(if (isNext) C.goldSoft else Color(0x14FFFFFF), RoundedCornerShape(11.dp))
-                                .border(if (isNext) 1.5.dp else 1.dp, if (isNext) C.gold else Color(0x24FFFFFF), RoundedCornerShape(11.dp))
-                                .padding(horizontal = 15.dp, vertical = 8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                if (isNext) "${PRAYER_NAMES[i]} · ${remainingText(Duration.between(now, next.time).toMinutes() + 1)}" else PRAYER_NAMES[i],
-                                fontSize = 12.sp, color = if (isNext) C.gold else C.dim,
-                                fontWeight = if (isNext) FontWeight.SemiBold else FontWeight.Normal
-                            )
-                            Text(Dates.time12(today[i]), fontSize = 17.sp, fontWeight = if (isNext) FontWeight.Medium else FontWeight.Light)
+                        val isNext = i == nextIdx
+                        if (i > 0 && i != nextIdx && i - 1 != nextIdx) {
+                            Box(Modifier.width(1.dp).height(44.dp).background(Color(0x33FFFFFF)))
+                        }
+                        if (isNext) {
+                            val cell = RoundedCornerShape(16.dp)
+                            Row(
+                                Modifier.weight(1.25f).fillMaxHeight()
+                                    .shadow(16.dp, cell, ambientColor = Color(0xFFFFB84A), spotColor = Color(0xFFFFB84A))
+                                    .background(Brush.verticalGradient(listOf(Color(0x66C9A15A), Color(0x55634A2A))), cell)
+                                    .border(1.5.dp, Brush.linearGradient(listOf(Color(0xFFFFE2A8), Color(0xFFFFB84A))), cell),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(PRAYER_NAMES[i], fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(Dates.time12(today[i]), fontSize = 23.sp, fontWeight = FontWeight.Medium, color = Color(0xFFFFD27A))
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                LineGlyph(Glyph.Dome, Modifier.size(30.dp), Color(0xFFFFD27A))
+                            }
+                        } else {
+                            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(PRAYER_NAMES[i], fontSize = 14.sp, color = Color(0xE6FFFFFF))
+                                Text(Dates.time12(today[i]), fontSize = 20.sp, fontWeight = FontWeight.Medium)
+                            }
                         }
                     }
                 }
             }
+
+            Spacer(Modifier.height(H * 0.065f))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.width(110.dp).height(1.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, Color(0x99FFFFFF)))))
+                Spacer(Modifier.width(16.dp))
+                Text("اللهم تقبل منا صالح الأعمال", fontSize = 15.sp, color = Color(0xF2FFFFFF))
+                Spacer(Modifier.width(16.dp))
+                Box(Modifier.width(110.dp).height(1.dp).background(Brush.horizontalGradient(listOf(Color(0x99FFFFFF), Color.Transparent))))
+            }
+            Spacer(Modifier.height(H * 0.075f))
         }
     }
 }
 
-/** Mosque silhouette along the bottom of the screen (an original drawing). */
-private fun DrawScope.drawMosque(night: Boolean) {
+/** Night sky, crescent, mountains, a lit mosque with palms, and its reflection on the water. */
+private fun DrawScope.drawNightScene(stars: List<Star>, twinkle: Float, ripple: Float) {
     val w = size.width
     val h = size.height
-    val sx = w / 1920f
-    val base = h - 420f * sx
-    fun p(x: Float, y: Float) = Offset(x * sx, base + y * sx)
+    val horizon = h * 0.68f
 
-    val hill = Path().apply {
-        moveTo(p(0f, 330f).x, p(0f, 330f).y)
-        quadraticBezierTo(p(300f, 270f).x, p(300f, 270f).y, p(620f, 315f).x, p(620f, 315f).y)
-        quadraticBezierTo(p(940f, 360f).x, p(940f, 360f).y, p(1240f, 300f).x, p(1240f, 300f).y)
-        quadraticBezierTo(p(1580f, 250f).x, p(1580f, 250f).y, p(1920f, 320f).x, p(1920f, 320f).y)
-        lineTo(w, h); lineTo(0f, h); close()
+    // sky
+    drawRect(Brush.verticalGradient(listOf(Color(0xFF0B1840), Color(0xFF16296A), Color(0xFF2E3C86), Color(0xFF5A5294), Color(0xFF7A6496)), 0f, horizon))
+    drawRect(Brush.radialGradient(listOf(Color(0x55FFB27A), Color.Transparent), Offset(w * 0.86f, horizon), w * 0.3f), Offset(0f, 0f), Size(w, horizon))
+    stars.forEach { s ->
+        val a = 0.3f + 0.7f * ((kotlin.math.sin(twinkle + s.phase) + 1f) / 2f)
+        drawCircle(Color.White.copy(alpha = a), radius = s.r * density, center = Offset(s.x * w, s.y * h))
     }
-    drawPath(hill, if (night) Color(0xFF070C18) else Color(0xFF2A1626))
+    // a few soft clouds on the left
+    withTransform({ scale(1f, 0.18f, Offset(w * 0.18f, h * 0.45f)) }) {
+        drawCircle(Brush.radialGradient(listOf(Color(0x557D84C0), Color.Transparent), Offset(w * 0.18f, h * 0.45f), w * 0.2f), w * 0.2f, Offset(w * 0.18f, h * 0.45f))
+    }
+    withTransform({ scale(1f, 0.12f, Offset(w * 0.3f, h * 0.53f)) }) {
+        drawCircle(Brush.radialGradient(listOf(Color(0x447D84C0), Color.Transparent), Offset(w * 0.3f, h * 0.53f), w * 0.18f), w * 0.18f, Offset(w * 0.3f, h * 0.53f))
+    }
 
-    val c = if (night) Color(0xFF03060D) else Color(0xFF1A0D18)
-    fun rect(x: Float, y: Float, rw: Float, rh: Float) = drawRect(c, p(x, y), Size(rw * sx, rh * sx))
-    fun dome(x1: Float, x2: Float, baseY: Float, topY: Float) {
-        val mid = (x1 + x2) / 2
-        val path = Path().apply {
-            moveTo(p(x1, baseY).x, p(x1, baseY).y)
-            quadraticBezierTo(p(x1, topY + (baseY - topY) * 0.35f).x, p(x1, topY + (baseY - topY) * 0.35f).y, p(mid, topY).x, p(mid, topY).y)
-            quadraticBezierTo(p(x2, topY + (baseY - topY) * 0.35f).x, p(x2, topY + (baseY - topY) * 0.35f).y, p(x2, baseY).x, p(x2, baseY).y)
+    // crescent moon with glow
+    val mc = Offset(w * 0.175f, h * 0.2f)
+    val mr = w * 0.05f
+    drawCircle(Brush.radialGradient(listOf(Color(0x40FFE9C4), Color.Transparent), mc, mr * 2.6f), mr * 2.6f, mc)
+    val disc = Path().apply { addOval(androidx.compose.ui.geometry.Rect(mc.x - mr, mc.y - mr, mc.x + mr, mc.y + mr)) }
+    val cut = Path().apply { addOval(androidx.compose.ui.geometry.Rect(mc.x - mr * 0.62f, mc.y - mr * 1.18f, mc.x + mr * 1.3f, mc.y + mr * 0.7f)) }
+    val moon = Path().apply { op(disc, cut, androidx.compose.ui.graphics.PathOperation.Difference) }
+    drawPath(moon, Brush.linearGradient(listOf(Color(0xFFFFF4DE), Color(0xFFF2D9AE)), Offset(mc.x - mr, mc.y), Offset(mc.x + mr, mc.y + mr)))
+
+    // mountains on the left
+    val far = Path().apply {
+        moveTo(0f, horizon - h * 0.05f)
+        cubicTo(w * 0.08f, horizon - h * 0.09f, w * 0.18f, horizon - h * 0.1f, w * 0.26f, horizon - h * 0.065f)
+        cubicTo(w * 0.33f, horizon - h * 0.04f, w * 0.38f, horizon - h * 0.085f, w * 0.46f, horizon - h * 0.06f)
+        cubicTo(w * 0.52f, horizon - h * 0.04f, w * 0.56f, horizon - h * 0.02f, w * 0.6f, horizon)
+        lineTo(0f, horizon); close()
+    }
+    drawPath(far, Brush.verticalGradient(listOf(Color(0xFF3B4686), Color(0xFF26306A)), horizon - h * 0.1f, horizon))
+    // city lights on the far shore
+    val rnd = Random(3)
+    repeat(60) {
+        val x = rnd.nextFloat() * w * 0.32f
+        drawCircle(Color(0xFFFFD9A0).copy(alpha = 0.5f + rnd.nextFloat() * 0.5f), 0.8f * density, Offset(x, horizon - rnd.nextFloat() * h * 0.006f))
+    }
+
+    // water
+    drawRect(Brush.verticalGradient(listOf(Color(0xFF34407E), Color(0xFF1C275A), Color(0xFF0E1838)), horizon, h), Offset(0f, horizon), Size(w, h - horizon))
+
+    // mosque (right side)
+    drawMosque(w, h, horizon)
+
+    // reflections of the lit mosque on the water
+    val gold = Color(0xFFFFC77A)
+    for (k in 0 until 26) {
+        val x = w * (0.66f + k * 0.0125f)
+        val len = h * (0.06f + ((k * 37) % 11) / 11f * 0.16f)
+        val y0 = horizon + h * 0.012f + ((k * 13) % 5) * h * 0.004f
+        val a = 0.18f + 0.3f * ((kotlin.math.sin(ripple * 6.28f + k) + 1f) / 2f)
+        drawRect(gold.copy(alpha = a), Offset(x, y0), Size(w * 0.0035f, len))
+    }
+    drawRect(Brush.verticalGradient(listOf(Color(0x33FFC77A), Color.Transparent), horizon, horizon + h * 0.22f), Offset(w * 0.64f, horizon), Size(w * 0.36f, h * 0.22f))
+    // left shore lights reflection
+    for (k in 0 until 14) {
+        val x = w * (0.01f + k * 0.022f)
+        drawRect(gold.copy(alpha = 0.18f), Offset(x, horizon + h * 0.006f), Size(w * 0.0025f, h * (0.02f + (k % 4) * 0.012f)))
+    }
+    // soft vignette
+    drawRect(Brush.verticalGradient(listOf(Color(0x33000000), Color.Transparent, Color.Transparent, Color(0x55000000))))
+}
+
+private fun DrawScope.drawMosque(w: Float, h: Float, horizon: Float) {
+    val stone = Brush.verticalGradient(listOf(Color(0xFFE9D9C4), Color(0xFFB9A48E)), h * 0.3f, horizon)
+    val shade = Color(0xFF8E7C6E)
+    val lit = Color(0xFFFFCF84)
+    fun X(f: Float) = w * f
+    fun Y(f: Float) = h * f
+
+    // glow behind the building
+    drawCircle(Brush.radialGradient(listOf(Color(0x66FFC27A), Color.Transparent), Offset(X(0.84f), Y(0.6f)), X(0.2f)), X(0.2f), Offset(X(0.84f), Y(0.6f)))
+
+    fun dome(cx: Float, base: Float, r: Float, tall: Float) {
+        val p = Path().apply {
+            moveTo(X(cx - r), Y(base))
+            cubicTo(X(cx - r), Y(base - tall * 0.7f), X(cx - r * 0.25f), Y(base - tall * 0.85f), X(cx), Y(base - tall))
+            cubicTo(X(cx + r * 0.25f), Y(base - tall * 0.85f), X(cx + r), Y(base - tall * 0.7f), X(cx + r), Y(base))
             close()
         }
-        drawPath(path, c)
+        drawPath(p, Brush.horizontalGradient(listOf(Color(0xFFCDB89F), Color(0xFFFFF0D8), Color(0xFFB8A189)), X(cx - r), X(cx + r)))
+        drawLine(Color(0xFFE8C88E), Offset(X(cx), Y(base - tall)), Offset(X(cx), Y(base - tall - 0.035f)), X(0.0016f))
+        drawCircle(Color(0xFFE8C88E), X(0.0028f), Offset(X(cx), Y(base - tall - 0.038f)))
     }
-    fun cone(x: Float, w2: Float, baseY: Float, topY: Float) {
-        val path = Path().apply {
-            moveTo(p(x - w2, baseY).x, p(x - w2, baseY).y)
-            lineTo(p(x, topY).x, p(x, topY).y)
-            lineTo(p(x + w2, baseY).x, p(x + w2, baseY).y)
-            close()
+    fun minaret(cx: Float, top: Float, bw: Float) {
+        drawRect(stone, Offset(X(cx - bw / 2), Y(top + 0.06f)), Size(X(bw), horizon - Y(top + 0.06f)))
+        // balconies
+        listOf(0.11f, 0.2f).forEach { dy ->
+            drawRect(Color(0xFFD8C4AA), Offset(X(cx - bw * 0.85f), Y(top + dy)), Size(X(bw * 1.7f), Y(0.012f)))
+            drawRect(lit.copy(alpha = 0.9f), Offset(X(cx - bw * 0.25f), Y(top + dy - 0.03f)), Size(X(bw * 0.5f), Y(0.022f)))
         }
-        drawPath(path, c)
+        drawPath(Path().apply {
+            moveTo(X(cx - bw * 0.55f), Y(top + 0.06f)); lineTo(X(cx), Y(top)); lineTo(X(cx + bw * 0.55f), Y(top + 0.06f)); close()
+        }, Color(0xFFCDB89F))
+        drawLine(Color(0xFFE8C88E), Offset(X(cx), Y(top)), Offset(X(cx), Y(top - 0.03f)), X(0.0014f))
     }
-    // Minarets
-    rect(560f, 120f, 34f, 300f); rect(552f, 190f, 50f, 12f); cone(577f, 21f, 120f, 58f)
-    rect(1326f, 120f, 34f, 300f); rect(1318f, 190f, 50f, 12f); cone(1343f, 21f, 120f, 58f)
-    // Side halls and domes
-    rect(640f, 285f, 170f, 135f); dome(655f, 795f, 285f, 212f)
-    rect(1110f, 285f, 170f, 135f); dome(1125f, 1265f, 285f, 212f)
-    // Main hall and dome
-    rect(780f, 250f, 360f, 170f); dome(800f, 1120f, 250f, 96f)
-    rect(957f, 58f, 6f, 40f)
-    drawCircle(c, 9f * sx, p(960f, 52f))
 
-    // Warm window light
-    val light = if (night) Color(0x59E2B45A) else Color(0x59FFC878)
-    fun arch(x: Float, y: Float, aw: Float, ah: Float) {
-        val path = Path().apply {
-            moveTo(p(x, y + ah).x, p(x, y + ah).y)
-            lineTo(p(x, y + aw / 2).x, p(x, y + aw / 2).y)
-            quadraticBezierTo(p(x + aw / 2, y - aw / 3).x, p(x + aw / 2, y - aw / 3).y, p(x + aw, y + aw / 2).x, p(x + aw, y + aw / 2).y)
-            lineTo(p(x + aw, y + ah).x, p(x + aw, y + ah).y)
+    // minarets
+    minaret(0.745f, 0.27f, 0.014f)
+    minaret(0.905f, 0.24f, 0.015f)
+    // side wings
+    drawRect(stone, Offset(X(0.66f), Y(0.6f)), Size(X(0.34f), horizon - Y(0.6f)))
+    dome(0.7f, 0.6f, 0.022f, 0.06f)
+    dome(0.955f, 0.6f, 0.022f, 0.06f)
+    // main hall and big dome
+    drawRect(stone, Offset(X(0.775f), Y(0.53f)), Size(X(0.11f), horizon - Y(0.53f)))
+    dome(0.83f, 0.53f, 0.05f, 0.13f)
+    dome(0.785f, 0.56f, 0.014f, 0.04f)
+    dome(0.875f, 0.56f, 0.014f, 0.04f)
+    // lit arches
+    fun arch(cx: Float, base: Float, aw: Float, ah: Float) {
+        val p = Path().apply {
+            moveTo(X(cx - aw / 2), Y(base))
+            lineTo(X(cx - aw / 2), Y(base - ah * 0.6f))
+            cubicTo(X(cx - aw / 2), Y(base - ah), X(cx), Y(base - ah * 1.05f), X(cx), Y(base - ah * 1.08f))
+            cubicTo(X(cx), Y(base - ah * 1.05f), X(cx + aw / 2), Y(base - ah), X(cx + aw / 2), Y(base - ah * 0.6f))
+            lineTo(X(cx + aw / 2), Y(base))
             close()
         }
-        drawPath(path, light)
+        drawPath(p, Brush.verticalGradient(listOf(Color(0xFFFFE3A6), lit, Color(0xFFE79A45)), Y(base - ah), Y(base)))
     }
-    arch(930f, 335f, 60f, 85f)
-    arch(850f, 318f, 36f, 62f)
-    arch(1034f, 318f, 36f, 62f)
+    listOf(0.795f, 0.83f, 0.865f).forEach { arch(it, horizon - Y(0.012f), 0.022f, 0.085f) }
+    listOf(0.68f, 0.705f, 0.73f, 0.93f, 0.955f, 0.98f).forEach { arch(it, horizon - Y(0.012f), 0.014f, 0.05f) }
+    // terrace edge
+    drawRect(Color(0xFFCFB89C), Offset(X(0.62f), horizon - Y(0.012f)), Size(X(0.38f), Y(0.012f)))
+    drawRect(shade.copy(alpha = 0.5f), Offset(X(0.62f), horizon), Size(X(0.38f), Y(0.004f)))
+
+    // palms
+    fun palm(x: Float, top: Float, s: Float) {
+        val dark = Color(0xFF0F1A33)
+        drawLine(dark, Offset(X(x), horizon), Offset(X(x + 0.004f), Y(top)), X(0.004f * s))
+        for (k in 0 until 7) {
+            val a = Math.toRadians(-160.0 + k * 23.0)
+            val len = X(0.035f * s)
+            val end = Offset(X(x + 0.004f) + (len * Math.cos(a)).toFloat(), Y(top) + (len * 0.55f * Math.sin(a)).toFloat() + len * 0.25f)
+            val p = Path().apply {
+                moveTo(X(x + 0.004f), Y(top))
+                quadraticTo((X(x + 0.004f) + end.x) / 2, Y(top) - len * 0.18f, end.x, end.y)
+            }
+            drawPath(p, dark, style = androidx.compose.ui.graphics.drawscope.Stroke(X(0.003f * s)))
+        }
+    }
+    palm(0.6f, 0.55f, 1.1f); palm(0.635f, 0.58f, 0.9f); palm(0.66f, 0.53f, 1f)
+    palm(0.985f, 0.5f, 1.1f); palm(0.965f, 0.56f, 0.8f)
 }
