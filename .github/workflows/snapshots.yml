@@ -24,7 +24,13 @@ jobs:
         if: always()
         run: |
           grep -E '^e: |FAILED|Exception|What went wrong' -A3 snap.log | head -40 | while IFS= read -r line; do echo "::warning::$line"; done
-          for f in app/build/test-results/testDebugUnitTest/*.xml; do grep -E 'Exception|at om\.yousef|at app\.cash' "$f" | head -25 | while IFS= read -r line; do echo "::warning::$line"; done; done
+          python3 - <<'EOF2'
+          import glob, xml.etree.ElementTree as ET
+          for f in glob.glob('app/build/test-results/testDebugUnitTest/*.xml'):
+              for fl in ET.parse(f).getroot().iter('failure'):
+                  for line in (fl.text or '').splitlines()[:40]:
+                      print('::warning::' + line.strip())
+          EOF2
       - name: Publish images to the snapshots branch
         if: always()
         run: |
