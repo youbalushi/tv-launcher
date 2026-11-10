@@ -15,9 +15,12 @@ jobs:
         env:
           URL: ${{ github.event.inputs.url }}
         run: |
+          set +e
           UA="Mozilla/5.0 (Linux; Android 11; MiTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
           code=$(curl -sL -m 20 -A "$UA" -o p.m3u8 -w "%{http_code}" "$URL")
-          echo "::error::playlist http $code, $(wc -c < p.m3u8) bytes"
+          echo "::error::playlist http $code (curl exit $?), $(wc -c < p.m3u8 2>/dev/null) bytes"
+          curl -sv -m 20 -A "$UA" -o /dev/null "$URL" 2>&1 | grep -iE "SSL|certificate|subject|issuer|expire|HTTP/" | head -8 | tr '\n' ' ' | sed 's/^/::error::tls: /'; echo
+          code2=$(curl -skL -m 20 -A "$UA" -o p.m3u8 -w "%{http_code}" "$URL"); echo "::error::insecure http $code2"
           echo "::error::$(head -c 600 p.m3u8 | tr '\n' ' ')"
           sudo apt-get install -y -qq ffmpeg >/dev/null 2>&1
           out=$(timeout 40 ffprobe -v error -user_agent "$UA" -show_entries stream=codec_type,codec_name,width,height -of csv=p=0 "$URL" 2>&1 | head -8 | tr '\n' ' ')
