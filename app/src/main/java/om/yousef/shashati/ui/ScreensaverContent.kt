@@ -101,9 +101,9 @@ fun ScreensaverContent() {
             Modifier.fillMaxSize().offset(shiftX.dp, shiftY.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(H * 0.035f))
+            Spacer(Modifier.height(H * 0.01f))
             Text(
-                Dates.time12(now.toLocalTime()), color = Color.White, fontSize = 92.sp, fontWeight = FontWeight.Normal, lineHeight = 96.sp,
+                Dates.time12(now.toLocalTime()), color = Color.White, fontSize = 84.sp, fontWeight = FontWeight.Normal, lineHeight = 86.sp,
                 letterSpacing = 2.sp, style = androidx.compose.material3.LocalTextStyle.current.copy(shadow = textShadow)
             )
             Text(
@@ -113,7 +113,7 @@ fun ScreensaverContent() {
             if (Prefs.saverDhikr) {
                 Text(
                     Dates.dhikr(now), fontSize = 16.sp, color = Color(0xFFFFE2A8),
-                    modifier = Modifier.padding(top = 6.dp), style = androidx.compose.material3.LocalTextStyle.current.copy(shadow = textShadow)
+                    modifier = Modifier.padding(top = 2.dp), style = androidx.compose.material3.LocalTextStyle.current.copy(shadow = textShadow)
                 )
             }
 
