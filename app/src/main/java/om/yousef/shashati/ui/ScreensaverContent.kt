@@ -86,36 +86,35 @@ fun ScreensaverContent() {
     }
     val nextToday = next.time.toLocalDate() == now.toLocalDate()
 
+    val textShadow = androidx.compose.ui.graphics.Shadow(Color(0x99000000), Offset(0f, 2f), 12f)
     BoxWithConstraints(Modifier.fillMaxSize().background(Color(0xFF0A1638))) {
         val H = maxHeight
-        Canvas(Modifier.fillMaxSize()) {
-            drawNightScene(stars, twinkle, ripple)
-        }
+        // The owner's photo of the mosque at night (time, dates and dhikr sit in the sky above it).
+        androidx.compose.foundation.Image(
+            androidx.compose.ui.res.painterResource(om.yousef.shashati.R.drawable.saver_mosque), null,
+            Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop
+        )
+        // a little darkening at the top keeps the white text easy to read
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Color(0x59000820), 0.45f to Color.Transparent)))
 
         Column(
             Modifier.fillMaxSize().offset(shiftX.dp, shiftY.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(H * 0.065f))
-            // "وضع السكون" with lines either side
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.width(60.dp).height(1.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, Color(0x99FFFFFF)))))
-                Spacer(Modifier.width(14.dp))
-                Text("وضع السكون", fontSize = 14.sp, color = Color(0xEEFFFFFF))
-                Spacer(Modifier.width(7.dp))
-                LineGlyph(Glyph.Moon, Modifier.size(17.dp))
-                Spacer(Modifier.width(14.dp))
-                Box(Modifier.width(60.dp).height(1.dp).background(Brush.horizontalGradient(listOf(Color(0x99FFFFFF), Color.Transparent))))
-            }
             Spacer(Modifier.height(H * 0.035f))
-            Text(Dates.time12(now.toLocalTime()), fontSize = 108.sp, fontWeight = FontWeight.Normal, lineHeight = 112.sp, letterSpacing = 2.sp)
-            Spacer(Modifier.height(H * 0.015f))
+            Text(
+                Dates.time12(now.toLocalTime()), fontSize = 92.sp, fontWeight = FontWeight.Normal, lineHeight = 96.sp,
+                letterSpacing = 2.sp, style = androidx.compose.ui.text.TextStyle(shadow = textShadow)
+            )
             Text(
                 Dates.gregorian(now.toLocalDate()) + if (Prefs.saverHijri) "، " + Dates.hijri(now.toLocalDate()) + " هـ" else "",
-                fontSize = 19.sp, color = Color(0xF2FFFFFF)
+                fontSize = 18.sp, color = Color(0xF2FFFFFF), style = androidx.compose.ui.text.TextStyle(shadow = textShadow)
             )
             if (Prefs.saverDhikr) {
-                Text("الحمد لله رب العالمين", fontSize = 15.sp, color = Color(0xCCFFDFA0), modifier = Modifier.padding(top = 6.dp))
+                Text(
+                    Dates.dhikr(now), fontSize = 16.sp, color = Color(0xFFFFE2A8),
+                    modifier = Modifier.padding(top = 6.dp), style = androidx.compose.ui.text.TextStyle(shadow = textShadow)
+                )
             }
 
             Spacer(Modifier.weight(1f))
@@ -162,14 +161,7 @@ fun ScreensaverContent() {
                 }
             }
 
-            Spacer(Modifier.height(H * 0.065f))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.width(110.dp).height(1.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, Color(0x99FFFFFF)))))
-                Spacer(Modifier.width(16.dp))
-                Text("اللهم تقبل منا صالح الأعمال", fontSize = 15.sp, color = Color(0xF2FFFFFF))
-                Spacer(Modifier.width(16.dp))
-                Box(Modifier.width(110.dp).height(1.dp).background(Brush.horizontalGradient(listOf(Color(0x99FFFFFF), Color.Transparent))))
-            }
+            Spacer(Modifier.height(H * 0.065f + 21.dp))
             Spacer(Modifier.height(H * 0.075f))
         }
     }
