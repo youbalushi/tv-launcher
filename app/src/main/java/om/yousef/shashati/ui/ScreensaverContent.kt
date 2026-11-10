@@ -103,17 +103,17 @@ fun ScreensaverContent() {
         ) {
             Spacer(Modifier.height(H * 0.035f))
             Text(
-                Dates.time12(now.toLocalTime()), fontSize = 92.sp, fontWeight = FontWeight.Normal, lineHeight = 96.sp,
-                letterSpacing = 2.sp, style = androidx.compose.ui.text.TextStyle(shadow = textShadow)
+                Dates.time12(now.toLocalTime()), color = Color.White, fontSize = 92.sp, fontWeight = FontWeight.Normal, lineHeight = 96.sp,
+                letterSpacing = 2.sp, style = androidx.compose.material3.LocalTextStyle.current.copy(shadow = textShadow)
             )
             Text(
                 Dates.gregorian(now.toLocalDate()) + if (Prefs.saverHijri) "، " + Dates.hijri(now.toLocalDate()) + " هـ" else "",
-                fontSize = 18.sp, color = Color(0xF2FFFFFF), style = androidx.compose.ui.text.TextStyle(shadow = textShadow)
+                fontSize = 18.sp, color = Color(0xF2FFFFFF), style = androidx.compose.material3.LocalTextStyle.current.copy(shadow = textShadow)
             )
             if (Prefs.saverDhikr) {
                 Text(
                     Dates.dhikr(now), fontSize = 16.sp, color = Color(0xFFFFE2A8),
-                    modifier = Modifier.padding(top = 6.dp), style = androidx.compose.ui.text.TextStyle(shadow = textShadow)
+                    modifier = Modifier.padding(top = 6.dp), style = androidx.compose.material3.LocalTextStyle.current.copy(shadow = textShadow)
                 )
             }
 
@@ -123,7 +123,7 @@ fun ScreensaverContent() {
                 val bar = RoundedCornerShape(20.dp)
                 Row(
                     Modifier.width(560.dp).height(80.dp)
-                        .background(Brush.verticalGradient(listOf(Color(0x40B4C6EE), Color(0x2A2B3F7C))), bar)
+                        .background(Brush.verticalGradient(listOf(Color(0x8C142350), Color(0x99101C40))), bar)
                         .border(1.dp, Color(0x40FFFFFF), bar)
                         .padding(5.dp),
                     verticalAlignment = Alignment.CenterVertically,
