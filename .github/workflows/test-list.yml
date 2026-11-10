@@ -1,0 +1,15 @@
+name: Test playlist
+
+on:
+  workflow_dispatch:
+    inputs:
+      file:
+        description: m3u file in the repo
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/check_deep.py "${{ github.event.inputs.file }}"
