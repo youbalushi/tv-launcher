@@ -35,5 +35,6 @@ def check(e):
         return e["name"], "FAIL " + str(ex)[:90]
 
 with ThreadPoolExecutor(16) as p:
-    for name, res in p.map(check, entries):
-        print(f"::error::{res} :: {name}")
+    for i, (name, res) in enumerate(p.map(check, entries)):
+        kind = ["error", "warning", "notice"][min(i // 10, 2)]  # GitHub keeps 10 of each kind
+        print(f"::{kind}::{res} :: {name}")
