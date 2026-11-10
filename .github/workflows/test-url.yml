@@ -22,7 +22,14 @@ jobs:
           curl -sv -m 20 -A "$UA" -o /dev/null "$URL" 2>&1 | grep -iE "SSL|certificate|subject|issuer|expire|HTTP/" | head -8 | tr '\n' ' ' | sed 's/^/::error::tls: /'; echo
           code2=$(curl -skL -m 20 -A "$UA" -o p.m3u8 -w "%{http_code}" "$URL"); echo "::error::insecure http $code2"
           echo "::error::$(head -c 600 p.m3u8 | tr '\n' ' ')"
+          err=$(curl -s -m 20 -A "$UA" -o /dev/null "$URL" 2>&1; curl -sS -m 20 -A "$UA" -o /dev/null "$URL" 2>&1 | head -2 | tr '\n' ' '); echo "::error::verify: $err"
+          echo | openssl s_client -connect "$(echo "$URL" | sed -E 's#https://([^/]+)/.*#\1#'):443" -servername "$(echo "$URL" | sed -E 's#https://([^/]+)/.*#\1#')" 2>/dev/null | grep -E "s:|i:|Verify return" | head -8 | tr '\n' ' ' | sed 's/^/::error::chain: /'; echo
+          base="${URL%/*}"; v=$(grep -v '^#' p.m3u8 | head -1); [ -n "$v" ] && case "$v" in http*) vu="$v";; *) vu="$base/$v";; esac
+          c3=$(curl -skL -m 20 -A "$UA" -o v.m3u8 -w "%{http_code}" "$vu"); seg=$(grep -v '^#' v.m3u8 | tail -1)
+          case "$seg" in http*) su="$seg";; *) su="${vu%/*}/$seg";; esac
+          c4=$(curl -skL -m 30 -A "$UA" -o seg.ts -w "%{http_code}" "$su"); echo "::error::variant $c3, segment $c4, $(wc -c < seg.ts) bytes"
           sudo apt-get install -y -qq ffmpeg >/dev/null 2>&1
+          echo "::error::segment probe: $(ffprobe -v error -show_entries stream=codec_name,width,height -of csv=p=0 seg.ts 2>&1 | tr '\n' ' ')"
           out=$(timeout 40 ffprobe -v error -user_agent "$UA" -show_entries stream=codec_type,codec_name,width,height -of csv=p=0 "$URL" 2>&1 | head -8 | tr '\n' ' ')
           echo "::error::ffprobe: $out"
           timeout 40 ffmpeg -v error -user_agent "$UA" -i "$URL" -t 8 -f null - 2>&1 | head -3 | tr '\n' ' ' | sed 's/^/::error::decode: /'; echo
