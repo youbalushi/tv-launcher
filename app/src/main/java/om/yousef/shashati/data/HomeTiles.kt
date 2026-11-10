@@ -7,7 +7,7 @@ import android.content.Context
  * (plus the fixed "all channels" / "all apps" cards).
  */
 object HomeTiles {
-    const val SLOTS = 4
+    const val SLOTS = 5
 
     /** Apps from the approved design, used when they exist on this TV. */
     val designApps = listOf(
@@ -20,7 +20,8 @@ object HomeTiles {
     fun channels(context: Context): List<Channel> {
         val all = ChannelRepository.load(context).channels
         val saved = Prefs.homeChannelsRaw?.split("|")?.filter { it.isNotBlank() }
-        val ids = saved ?: (ChannelRepository.favorites().toList() + all.filter { it.category == "oman" }.map { it.id } + all.map { it.id })
+        // the owner's choices first, then fill any empty card
+        val ids = saved.orEmpty() + ChannelRepository.favorites().toList() + all.filter { it.category == "oman" }.map { it.id } + all.map { it.id }
         return ids.distinct().mapNotNull { id -> all.firstOrNull { it.id == id } }.take(SLOTS)
     }
 
@@ -28,7 +29,7 @@ object HomeTiles {
         val installed = AppsRepository.installed(context)
         val saved = Prefs.homeAppsRaw?.split("|")?.filter { it.isNotBlank() }
         val favs = Prefs.favoritesRaw?.split("|").orEmpty()
-        val ids = saved ?: (designApps + favs + installed.map { it.packageName })
+        val ids = saved.orEmpty() + designApps + favs + installed.map { it.packageName }
         return ids.distinct().mapNotNull { p -> installed.firstOrNull { it.packageName == p } }.take(SLOTS)
     }
 
