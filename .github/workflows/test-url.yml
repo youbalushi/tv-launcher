@@ -1,0 +1,26 @@
+name: Test stream URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: m3u8 URL
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe
+        env:
+          URL: ${{ github.event.inputs.url }}
+        run: |
+          UA="Mozilla/5.0 (Linux; Android 11; MiTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
+          code=$(curl -sL -m 20 -A "$UA" -o p.m3u8 -w "%{http_code}" "$URL")
+          echo "::error::playlist http $code, $(wc -c < p.m3u8) bytes"
+          echo "::error::$(head -c 600 p.m3u8 | tr '\n' ' ')"
+          sudo apt-get install -y -qq ffmpeg >/dev/null 2>&1
+          out=$(timeout 40 ffprobe -v error -user_agent "$UA" -show_entries stream=codec_type,codec_name,width,height -of csv=p=0 "$URL" 2>&1 | head -8 | tr '\n' ' ')
+          echo "::error::ffprobe: $out"
+          timeout 40 ffmpeg -v error -user_agent "$UA" -i "$URL" -t 8 -f null - 2>&1 | head -3 | tr '\n' ' ' | sed 's/^/::error::decode: /'; echo
+          echo "::error::decode exit ${PIPESTATUS[0]}"
