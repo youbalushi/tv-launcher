@@ -161,8 +161,8 @@ fun ScreensaverContent() {
                 }
             }
 
-            Spacer(Modifier.height(H * 0.065f + 21.dp))
-            Spacer(Modifier.height(H * 0.075f))
+            // the prayer bar sits on the mosque's marble floor
+            Spacer(Modifier.height(H * 0.05f))
         }
     }
 }
