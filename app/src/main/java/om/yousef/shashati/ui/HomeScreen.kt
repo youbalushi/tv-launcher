@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -34,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -91,10 +94,9 @@ fun GlowTile(
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
             .onFocusChanged { focused = it.isFocused }
-            .then(
-                if (focused) Modifier.shadow(20.dp, shape, ambientColor = FocusGold, spotColor = FocusGold)
-                else Modifier
-            )
+            // Gold glow drawn only outside the card. (A system shadow showed through the
+            // see-through glass as extra rectangles behind and under the logo.)
+            .then(if (focused) Modifier.outerGlow(shape, FocusGold) else Modifier)
             .clip(shape)
             .background(background, shape)
             .border(
@@ -109,6 +111,21 @@ fun GlowTile(
         // glassy highlight
         Box(Modifier.matchParentSize().background(Brush.linearGradient(listOf(Color(0x24FFFFFF), Color.Transparent), Offset.Zero, Offset(260f, 260f))))
         content(focused)
+    }
+}
+
+/** Soft glow around a shape, drawn outside its edge so the inside stays clean. */
+fun Modifier.outerGlow(shape: Shape, color: Color, spread: Dp = 10.dp): Modifier = drawBehind {
+    val outline = shape.createOutline(size, layoutDirection, this)
+    val path = androidx.compose.ui.graphics.Path().apply { addOutline(outline) }
+    val inside = androidx.compose.ui.graphics.Path().apply { addOutline(outline) }
+    val steps = 8
+    val sp = spread.toPx()
+    clipPath(inside, androidx.compose.ui.graphics.ClipOp.Difference) {
+        for (k in steps downTo 1) {
+            val w = sp * k / steps * 2f
+            drawPath(path, color.copy(alpha = 0.10f * (1f - (k - 1f) / steps)), style = Stroke(width = w))
+        }
     }
 }
 
@@ -206,7 +223,7 @@ fun HomeScreen(
                             .padding(horizontal = 18.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(Dates.dhikr(now.toLocalDate()), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFFFFE2A8), maxLines = 1)
+                        Text(Dates.dhikr(now), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFFFFE2A8), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 420.dp))
                     }
                 }
                 Spacer(Modifier.width(14.dp))

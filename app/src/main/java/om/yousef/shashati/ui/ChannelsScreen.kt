@@ -178,16 +178,6 @@ fun ChannelsScreen(version: Int, onBack: () -> Unit, onPlay: (List<Channel>, Int
                                         color = Color(0x99FFFFFF), modifier = Modifier.align(Alignment.Center)
                                     )
                                 }
-                                Row(
-                                    Modifier.align(Alignment.TopStart).padding(5.dp)
-                                        .background(Color(0x80000000), RoundedCornerShape(4.dp))
-                                        .padding(horizontal = 5.dp, vertical = 1.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(Modifier.size(4.dp).background(C.live, CircleShape))
-                                    Spacer(Modifier.width(3.dp))
-                                    Text("مباشر", fontSize = 8.sp, fontWeight = FontWeight.SemiBold)
-                                }
                             }
                             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                 Text("${numberOf[ch.id] ?: ""}", fontSize = 11.sp, color = C.faint)

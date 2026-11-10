@@ -33,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -140,7 +139,7 @@ fun ScreensaverContent() {
                             val cell = RoundedCornerShape(16.dp)
                             Row(
                                 Modifier.weight(1.25f).fillMaxHeight()
-                                    .shadow(16.dp, cell, ambientColor = Color(0xFFFFB84A), spotColor = Color(0xFFFFB84A))
+                                    .outerGlow(cell, Color(0xFFFFB84A))
                                     .background(Brush.verticalGradient(listOf(Color(0x66C9A15A), Color(0x55634A2A))), cell)
                                     .border(1.5.dp, Brush.linearGradient(listOf(Color(0xFFFFE2A8), Color(0xFFFFB84A))), cell),
                                 verticalAlignment = Alignment.CenterVertically,

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -94,7 +95,7 @@ fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Uni
                     if (recovered) { section = 6; sub = "changePin" }
                 }
                 else -> Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    Column(Modifier.width(220.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.width(220.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SECTIONS.forEachIndexed { i, name ->
                             Focusable(
                                 modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -110,6 +111,19 @@ fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Uni
                                 )
                             }
                         }
+                        Spacer(Modifier.weight(1f))
+                        val context = LocalContext.current
+                        val ver = remember {
+                            runCatching {
+                                val pi = context.packageManager.getPackageInfo(context.packageName, 0)
+                                androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pi).toString()
+                            }.getOrDefault("")
+                        }
+                        Text(
+                            "تطوير يوسف البلوشي · الإصدار $ver",
+                            fontSize = 11.sp, color = C.faint,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
+                        )
                     }
                     Box(
                         Modifier.weight(1f).fillMaxSize()
@@ -309,7 +323,6 @@ private fun PrayerSection(onChanged: () -> Unit) {
     val scope = rememberCoroutineScope()
     var gov by remember { mutableIntStateOf(Prefs.govIndex) }
     var wil by remember { mutableIntStateOf(Prefs.wilIndex) }
-    var method by remember { mutableIntStateOf(Prefs.method) }
     var offsets by remember { mutableStateOf(Prefs.offsets) }
     var status by remember { mutableStateOf("") }
 
@@ -319,12 +332,13 @@ private fun PrayerSection(onChanged: () -> Unit) {
             val ok = PrayerRepository.refreshIfNeeded(force = true)
             AlarmScheduler.scheduleNext(context)
             onChanged()
-            status = if (ok) "تم التحديث من الإنترنت" else "تعذّر الاتصال؛ تُستخدم الأوقات المحسوبة على الجهاز"
+            status = "تم تحديث الأوقات بالمعادلة العمانية"
         }
     }
 
     Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionHeader("موقع وأوقات الصلاة")
+        Text("الحساب بالمعادلة العمانية (تقويم وزارة الأوقاف والشؤون الدينية)", fontSize = 12.sp, color = C.gold)
         Text("المحافظة", fontSize = 13.sp, color = C.dim)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Locations.governorates.forEachIndexed { i, g ->
@@ -344,17 +358,8 @@ private fun PrayerSection(onChanged: () -> Unit) {
                 }
             }
         }
-        Text("طريقة الحساب", fontSize = 13.sp, color = C.dim)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Methods.all.forEach { m ->
-                Pill(m.name, selected = method == m.id, fontSize = 13) {
-                    method = m.id; Prefs.method = m.id
-                    refresh()
-                }
-            }
-        }
         Text("تعديل يدوي بالدقائق (لمطابقة تقويم وزارة الأوقاف)", fontSize = 13.sp, color = C.dim)
-        val today = remember(offsets, gov, wil, method, status) { PrayerRepository.timesFor(LocalDate.now()) }
+        val today = remember(offsets, gov, wil, status) { PrayerRepository.timesFor(LocalDate.now()) }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for (i in 0 until 5) {
                 Stepper(
@@ -373,10 +378,7 @@ private fun PrayerSection(onChanged: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Pill("تحديث الأوقات الآن", selected = false, fontSize = 13) { refresh() }
             Text(
-                status.ifEmpty {
-                    if (method == Methods.OMAN) "المعادلة العمانية: تُحسب على الجهاز بطريقة تقويم وزارة الأوقاف"
-                    else if (PrayerRepository.isOnlineSource()) "المصدر: الإنترنت (يُحدَّث يوميًا)" else "المصدر: حساب على الجهاز"
-                },
+                status.ifEmpty { "المعادلة العمانية: تُحسب على الجهاز بطريقة تقويم وزارة الأوقاف" },
                 fontSize = 12.sp, color = C.dim
             )
         }
