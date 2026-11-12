@@ -227,6 +227,8 @@ fun ChannelsScreen(version: Int, onBack: () -> Unit, onPlay: (List<Channel>, Int
             BackHandler { menuFor = null }
             ChannelMenu(
                 menu,
+                holding = longFired,
+                onRelease = { longFired = false },
                 onOpen = {
                     menuFor = null
                     val idx = shown.indexOfFirst { it.id == menu.id }.coerceAtLeast(0)
@@ -255,10 +257,29 @@ fun ChannelsScreen(version: Int, onBack: () -> Unit, onPlay: (List<Channel>, Int
 
 
 @Composable
-private fun ChannelMenu(ch: Channel, onOpen: () -> Unit, onDelete: () -> Unit, onCancel: () -> Unit) {
+private fun ChannelMenu(
+    ch: Channel,
+    holding: Boolean,
+    onRelease: () -> Unit,
+    onOpen: () -> Unit,
+    onDelete: () -> Unit,
+    onCancel: () -> Unit,
+) {
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { delay(80); runCatching { first.requestFocus() } }
-    Box(Modifier.fillMaxSize().background(Color(0xB3070D1C)), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier.fillMaxSize().background(Color(0xB3070D1C))
+            // While OK from the long press is still held, its release must not press «فتح القناة».
+            .onPreviewKeyEvent { e ->
+                val k = e.nativeKeyEvent.keyCode
+                val ok = k == android.view.KeyEvent.KEYCODE_DPAD_CENTER || k == android.view.KeyEvent.KEYCODE_ENTER
+                if (ok && holding) {
+                    if (e.type == KeyEventType.KeyUp) onRelease()
+                    true
+                } else false
+            },
+        contentAlignment = Alignment.Center
+    ) {
         Column(
             Modifier.width(320.dp)
                 .background(Color(0xF0182540), RoundedCornerShape(20.dp))
