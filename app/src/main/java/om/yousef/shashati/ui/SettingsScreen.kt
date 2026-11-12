@@ -88,8 +88,11 @@ fun SettingsScreen(initialSection: Int, onBack: () -> Unit, onChanged: () -> Uni
             }
             Spacer(Modifier.height(18.dp))
 
+            // Read as Compose state: Prefs alone does not redraw the screen, so after the
+            // first-time setup «حفظ» used to leave the setup screen showing.
+            var pinSet by remember { mutableStateOf(Prefs.hasPin) }
             when {
-                !Prefs.hasPin -> PinSetup(askPin = true, askRecovery = true, onDone = { unlocked = true })
+                !pinSet -> PinSetup(askPin = true, askRecovery = true, onDone = { unlocked = true; pinSet = Prefs.hasPin })
                 !unlocked -> PinGate("الإعدادات محمية") { recovered ->
                     unlocked = true
                     if (recovered) { section = 6; sub = "changePin" }
