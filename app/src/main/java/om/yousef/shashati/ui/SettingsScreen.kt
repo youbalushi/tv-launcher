@@ -194,9 +194,10 @@ private fun HomeSection(onChanged: () -> Unit) {
 }
 
 @Composable
-private fun SmallButton(text: String, danger: Boolean = false, onClick: () -> Unit) {
+private fun SmallButton(text: String, danger: Boolean = false, focusRequester: FocusRequester? = null, onClick: () -> Unit) {
     Focusable(
         modifier = Modifier.height(34.dp),
+        focusRequester = focusRequester,
         shape = RoundedCornerShape(9.dp),
         background = if (danger) C.danger else Color(0x1AFFFFFF),
         scaleOnFocus = 1.08f,
@@ -218,6 +219,16 @@ private fun FavoritesSection(onChanged: () -> Unit) {
     var appIds by remember { mutableStateOf(om.yousef.shashati.data.HomeTiles.apps(context).map { it.packageName }) }
     // what is being replaced: "ch" or "app" with the slot index
     var picking by remember { mutableStateOf<Pair<String, Int>?>(null) }
+    // After choosing (or going back) the focus returns to the same «استبدال» button.
+    val slotFocus = remember { mutableMapOf<String, FocusRequester>() }
+    var returnTo by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(picking) {
+        val key = returnTo
+        if (picking == null && key != null) {
+            delay(120)
+            runCatching { slotFocus[key]?.requestFocus() }
+        }
+    }
 
     fun chName(id: String) = allChannels.firstOrNull { it.id == id }?.name ?: id
     fun appName(p: String) = installed.firstOrNull { it.packageName == p }?.label ?: p
@@ -285,7 +296,11 @@ private fun FavoritesSection(onChanged: () -> Unit) {
                     SmallButton("▲") { if (i > 0) save(ids.toMutableList().apply { add(i - 1, removeAt(i)) }) }
                     SmallButton("▼") { if (i < ids.size - 1) save(ids.toMutableList().apply { add(i + 1, removeAt(i)) }) }
                 }
-                SmallButton(if (id == null) "اختيار" else "استبدال") { picking = kind to i }
+                val key = "$kind$i"
+                SmallButton(
+                    if (id == null) "اختيار" else "استبدال",
+                    focusRequester = slotFocus.getOrPut(key) { FocusRequester() }
+                ) { returnTo = key; picking = kind to i }
             }
         }
     }
