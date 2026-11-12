@@ -32,7 +32,7 @@ jobs:
           for f in glob.glob('app/build/test-results/testDebugUnitTest/*.xml'):
               for fl in ET.parse(f).getroot().iter('failure'):
                   ls = [l.strip() for l in (fl.text or '').splitlines()]
-                  keep = [l for l in ls if 'om.yousef' in l or 'Exception' in l or 'Caused' in l][:9]
+                  keep = (ls[:8] + [l for l in ls if 'om.yousef' in l or 'Caused' in l])[:16]
                   print('::error::' + ' | '.join(keep)[:3000])
           EOF2
       - name: Logo sheet
