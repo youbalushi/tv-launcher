@@ -114,6 +114,8 @@ object Prefs {
 
     // Home screen rows (pipe-separated ids) and weather cache
     var homeChannelsRaw by str("homeChannels")
+    /** Channels deleted on this TV (comma-separated ids). */
+    var hiddenChannelsRaw by str("hiddenChannels")
     var homeAppsRaw by str("homeApps")
     var weatherJson by str("weatherJson")
     var weatherAt by long("weatherAt", 0L)

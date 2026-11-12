@@ -185,13 +185,34 @@ private fun SectionHeader(text: String) {
 private fun HomeSection(onChanged: () -> Unit) {
     var bar by remember { mutableStateOf(Prefs.showPrayerBar) }
     var card by remember { mutableStateOf(Prefs.showNextCard) }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SectionHeader("الشاشة الرئيسية")
         ToggleRow("شريط أوقات الصلاة", "الصلوات الخمس في الشاشة الرئيسية", bar) {
             bar = !bar; Prefs.showPrayerBar = bar; onChanged()
         }
         ToggleRow("العد التنازلي للصلاة القادمة", "داخل شريط الصلاة أسفل الشاشة", card) {
             card = !card; Prefs.showNextCard = card; onChanged()
+        }
+
+        // Channels deleted from «جميع القنوات» (long-press OK) can be brought back here.
+        val context = LocalContext.current
+        var hidden by remember { mutableStateOf(om.yousef.shashati.data.ChannelRepository.hidden()) }
+        if (hidden.isNotEmpty()) {
+            val all = remember { om.yousef.shashati.data.ChannelRepository.loadAll(context).channels }
+            Text("القنوات المحذوفة", fontSize = 14.sp, color = C.gold, modifier = Modifier.padding(top = 6.dp))
+            hidden.forEach { id ->
+                Row(
+                    Modifier.fillMaxWidth().background(Color(0x0FFFFFFF), RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(all.firstOrNull { it.id == id }?.name ?: id, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    SmallButton("استرجاع") {
+                        om.yousef.shashati.data.ChannelRepository.unhide(id)
+                        hidden = om.yousef.shashati.data.ChannelRepository.hidden()
+                        onChanged()
+                    }
+                }
+            }
         }
     }
 }

@@ -45,6 +45,11 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.delay
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.type
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.focus.focusRequester
 import om.yousef.shashati.data.Channel
 import om.yousef.shashati.data.ChannelRepository
 
@@ -54,7 +59,12 @@ private const val FAVS = "__favs"
 @Composable
 fun ChannelsScreen(version: Int, onBack: () -> Unit, onPlay: (List<Channel>, Int) -> Unit) {
     val context = LocalContext.current
-    val list = remember(version) { ChannelRepository.load(context) }
+    var listVersion by remember { mutableStateOf(0) }
+    val list = remember(version, listVersion) { ChannelRepository.load(context) }
+    // Long-press OK on a channel: open / delete (delete asks for the PIN).
+    var menuFor by remember { mutableStateOf<Channel?>(null) }
+    var askPinFor by remember { mutableStateOf<Channel?>(null) }
+    var longFired by remember { mutableStateOf(false) }
     var tab by remember { mutableStateOf(ALL) }
     var favs by remember { mutableStateOf(ChannelRepository.favorites()) }
     val tabs = remember(list) { listOf(ALL to "الكل") + list.categories.map { it.id to it.name } + listOf(FAVS to "المفضلة") }
@@ -135,7 +145,19 @@ fun ChannelsScreen(version: Int, onBack: () -> Unit, onPlay: (List<Channel>, Int
             ) {
                 itemsIndexed(shown, key = { _, c -> c.id }) { i, ch ->
                     Focusable(
-                        modifier = Modifier.fillMaxWidth().height(84.dp),
+                        modifier = Modifier.fillMaxWidth().height(84.dp).onPreviewKeyEvent { e ->
+                            val n = e.nativeKeyEvent
+                            val ok = n.keyCode == android.view.KeyEvent.KEYCODE_DPAD_CENTER || n.keyCode == android.view.KeyEvent.KEYCODE_ENTER
+                            when {
+                                !ok -> false
+                                e.type == KeyEventType.KeyDown && n.repeatCount > 0 -> {
+                                    if (!longFired) { longFired = true; player.stop(); menuFor = ch }
+                                    true
+                                }
+                                e.type == KeyEventType.KeyUp && longFired -> { longFired = false; true }
+                                else -> false
+                            }
+                        },
                         focusRequester = if (i == 0) firstFocus else null,
                         scaleOnFocus = 1.04f,
                         background = C.glass,
@@ -199,8 +221,56 @@ fun ChannelsScreen(version: Int, onBack: () -> Unit, onPlay: (List<Channel>, Int
                 Text("Back للرجوع", fontSize = 12.sp, color = C.faint)
             }
         }
+
+        val menu = menuFor
+        if (menu != null) {
+            BackHandler { menuFor = null }
+            ChannelMenu(
+                menu,
+                onOpen = {
+                    menuFor = null
+                    val idx = shown.indexOfFirst { it.id == menu.id }.coerceAtLeast(0)
+                    onPlay(shown, idx)
+                },
+                onDelete = { menuFor = null; askPinFor = menu },
+                onCancel = { menuFor = null },
+            )
+        }
+        val toDelete = askPinFor
+        if (toDelete != null) {
+            BackHandler { askPinFor = null }
+            Box(Modifier.fillMaxSize().background(Color(0xE6070D1C))) {
+                PinGate("أدخل الرقم السري لحذف «${toDelete.name}»") {
+                    ChannelRepository.hide(toDelete.id)
+                    askPinFor = null
+                    listVersion++
+                }
+            }
+        }
     }
 
     // Keep favourites fresh when returning from the player.
     LaunchedEffect(active) { if (active) favs = ChannelRepository.favorites() }
+}
+
+
+@Composable
+private fun ChannelMenu(ch: Channel, onOpen: () -> Unit, onDelete: () -> Unit, onCancel: () -> Unit) {
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) { delay(80); runCatching { first.requestFocus() } }
+    Box(Modifier.fillMaxSize().background(Color(0xB3070D1C)), contentAlignment = Alignment.Center) {
+        Column(
+            Modifier.width(320.dp)
+                .background(Color(0xF0182540), RoundedCornerShape(20.dp))
+                .padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(ch.name, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+            Pill("فتح القناة", selected = false, modifier = Modifier.fillMaxWidth().focusRequester(first), fontSize = 15, onClick = onOpen)
+            Pill("حذف القناة", selected = false, modifier = Modifier.fillMaxWidth(), fontSize = 15, onClick = onDelete)
+            Pill("إلغاء", selected = false, modifier = Modifier.fillMaxWidth(), fontSize = 15, onClick = onCancel)
+            Text("الحذف يطلب الرقم السري، وتقدر ترجعها من الإعدادات", fontSize = 11.sp, color = C.dim)
+        }
+    }
 }

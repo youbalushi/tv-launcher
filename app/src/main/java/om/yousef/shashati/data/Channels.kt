@@ -29,7 +29,15 @@ object ChannelRepository {
     @Volatile
     private var cached: ChannelList? = null
 
+    /** The list without the channels the owner deleted on this TV. */
     fun load(context: Context): ChannelList {
+        val all = loadAll(context)
+        val hidden = hidden()
+        return if (hidden.isEmpty()) all else all.copy(channels = all.channels.filter { it.id !in hidden })
+    }
+
+    /** Everything, including deleted channels (for restoring them in the settings). */
+    fun loadAll(context: Context): ChannelList {
         cached?.let { return it }
         val fromPrefs = Prefs.channelsJson?.let { runCatching { parse(it) }.getOrNull() }
         val list = fromPrefs ?: parse(
@@ -56,6 +64,12 @@ object ChannelRepository {
             changed
         }.getOrDefault(false)
     }
+
+    fun hidden(): Set<String> =
+        Prefs.hiddenChannelsRaw?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+
+    fun hide(id: String) { Prefs.hiddenChannelsRaw = (hidden() + id).joinToString(",") }
+    fun unhide(id: String) { Prefs.hiddenChannelsRaw = (hidden() - id).joinToString(",") }
 
     fun favorites(): Set<String> =
         Prefs.channelFavs?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
