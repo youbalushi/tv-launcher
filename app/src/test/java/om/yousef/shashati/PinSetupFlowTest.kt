@@ -4,6 +4,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.printToString
 import androidx.test.core.app.ApplicationProvider
 import om.yousef.shashati.data.Prefs
 import om.yousef.shashati.ui.AppTheme
@@ -31,6 +33,9 @@ class PinSetupFlowTest {
         rule.waitForIdle()
         rule.onNodeWithText("حفظ").performClick()
         rule.waitForIdle()
+        val tree = rule.onRoot(useUnmergedTree = true).printToString(maxDepth = 30)
+            .lines().filter { it.contains("Text =") }.joinToString(" | ") { it.trim().take(60) }
+        java.io.File("build/pin-debug.txt").writeText("hasPin=${Prefs.hasPin} rec=${Prefs.recoveryHash != null}\n$tree")
         val opened = rule.onAllNodesWithText("بطاقات الرئيسية").fetchSemanticsNodes().isNotEmpty()
         println("::error::hasPin=${Prefs.hasPin} recovery=${Prefs.recoveryHash != null} settingsOpened=$opened")
         assertTrue("settings did not open", opened)

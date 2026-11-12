@@ -44,7 +44,7 @@ jobs:
       - name: Publish images to the snapshots branch
         if: always()
         run: |
-          mkdir -p /tmp/out && cp app/src/test/snapshots/images/*.png app/build/logo-preview/*.png /tmp/out/ 2>/dev/null || true
+          mkdir -p /tmp/out && cp app/src/test/snapshots/images/*.png app/build/logo-preview/*.png app/build/pin-debug.txt /tmp/out/ 2>/dev/null || true
           cd /tmp/out
           git init -q -b snapshots
           git -c user.name=ci -c user.email=ci@example.com add -A
