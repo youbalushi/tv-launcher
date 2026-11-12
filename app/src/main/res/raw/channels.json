@@ -272,16 +272,6 @@
       "logo": "https://i.imgur.com/PVt8OPN.png"
     },
     {
-      "id": "taha_tv",
-      "name": "طه",
-      "category": "kids",
-      "color": "#2B8A3E",
-      "urls": [
-        "https://stream.starmenajo.com/hls/app/live/ts:fhd.m3u8"
-      ],
-      "logo": "https://i.imgur.com/hdsrxvX.png"
-    },
-    {
       "id": "babyfirst",
       "name": "بيبي فيرست",
       "category": "kids",
@@ -729,16 +719,6 @@
         "https://svs.itworkscdn.net/alwoustalive/alwoustatv.smil/playlist.m3u8"
       ],
       "logo": "https://i5.satexpat.com/cha/ae/al-wousta-95x90.gif"
-    },
-    {
-      "id": "mbc_persia",
-      "name": "MBC فارسي",
-      "category": "drama",
-      "color": "#2E5A8C",
-      "urls": [
-        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-persia/818ee8e4b592dc497608f066d825bfb4/index.m3u8"
-      ],
-      "logo": "https://i.imgur.com/4FXiyjn.png"
     }
   ]
 }
