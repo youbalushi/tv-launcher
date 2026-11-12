@@ -19,7 +19,7 @@ jobs:
         with:
           gradle-version: '8.9'
       - name: Record
-        run: gradle :app:recordPaparazziDebug --no-daemon --stacktrace 2>&1 | tee snap.log
+        run: gradle :app:recordPaparazziDebug --no-daemon --stacktrace 2>&1 | tee snap.log; grep -h "::error::hasPin" -r app/build/test-results || true
       - name: Report errors
         if: always()
         run: |
