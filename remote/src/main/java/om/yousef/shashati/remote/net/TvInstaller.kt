@@ -53,7 +53,14 @@ class TvInstaller(private val context: Context, private val log: (String) -> Uni
     }
 
     /** Connects to the TV. The TV shows "Allow USB debugging?" the first time. */
-    fun connect(host: String): Dadb = Dadb.create(host, 5555, keys())
+    fun connect(host: String): Dadb {
+        val d = Dadb.create(host, 5555, keys())
+        // dadb connects lazily: run a command now so a refused or unanswered prompt fails at this step.
+        val r = d.shell("echo ok")
+        if (!r.output.contains("ok")) throw IllegalStateException("no answer from $host")
+        log("متصل بـ $host")
+        return d
+    }
 
     fun shell(d: Dadb, cmd: String): String {
         val r = d.shell(cmd)
