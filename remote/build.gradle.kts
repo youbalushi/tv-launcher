@@ -37,6 +37,7 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
+    packaging { resources.excludes += setOf("META-INF/*.kotlin_module", "META-INF/versions/**", "META-INF/INDEX.LIST") }
     lint {
         checkReleaseBuilds = false
         abortOnError = false
@@ -53,4 +54,6 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    // ADB client: installs and sets up شاشتي on a TV over Wi-Fi (replaces the laptop).
+    implementation("dev.mobile:dadb:1.2.10")
 }

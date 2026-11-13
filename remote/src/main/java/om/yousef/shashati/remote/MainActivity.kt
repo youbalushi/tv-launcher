@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity() {
         data object List : Screen
         data class Pair(val tv: FoundTv) : Screen
         data object Remote : Screen
+        data object Install : Screen
     }
 
     private var screen by mutableStateOf<Screen>(Screen.Loading)
@@ -56,7 +57,12 @@ class MainActivity : ComponentActivity() {
                     Screen.List -> TvListScreen(
                         onOpen = { tv -> open(tv) },
                         onPair = { found -> screen = Screen.Pair(found) },
+                        onInstall = { screen = Screen.Install },
                     )
+                    Screen.Install -> {
+                        BackHandler { screen = Screen.List }
+                        om.yousef.shashati.remote.ui.InstallScreen(onClose = { screen = Screen.List })
+                    }
                     is Screen.Pair -> {
                         BackHandler { screen = if (Controller.tv != null) Screen.Remote else Screen.List }
                         PairScreen(

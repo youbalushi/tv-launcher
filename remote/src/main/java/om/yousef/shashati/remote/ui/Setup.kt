@@ -116,7 +116,7 @@ fun Field(
 }
 
 @Composable
-fun TvListScreen(onOpen: (SavedTv) -> Unit, onPair: (FoundTv) -> Unit) {
+fun TvListScreen(onOpen: (SavedTv) -> Unit, onPair: (FoundTv) -> Unit, onInstall: () -> Unit = {}) {
     val context = LocalContext.current
     var saved by remember { mutableStateOf(TvStore.all()) }
     val found = remember { mutableStateListOf<FoundTv>() }
@@ -189,6 +189,14 @@ fun TvListScreen(onOpen: (SavedTv) -> Unit, onPair: (FoundTv) -> Unit) {
                             )
                         }
                         Text("ربط", color = C.gold, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+            item {
+                GlassButton(Modifier.fillMaxWidth().padding(top = 8.dp), color = C.goldSoft, borderColor = C.gold, onPress = onInstall) {
+                    Column(Modifier.fillMaxWidth().padding(18.dp)) {
+                        Text("تثبيت شاشتي على تلفزيون", color = C.gold, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                        Text("تثبيت لأول مرة أو تحديث، بدون لابتوب", color = C.dim, fontSize = 13.sp)
                     }
                 }
             }
