@@ -37,6 +37,8 @@ class MainActivity : ComponentActivity() {
 
     private var screen by mutableStateOf<Screen>(Screen.Loading)
     private var started = false
+    /** The TV that was open before «تغيير», so the list page can go back to it. */
+    private var previousTv: om.yousef.shashati.remote.data.SavedTv? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,11 +56,16 @@ class MainActivity : ComponentActivity() {
                     Screen.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Background(); CircularProgressIndicator(color = C.gold)
                     }
-                    Screen.List -> TvListScreen(
-                        onOpen = { tv -> open(tv) },
-                        onPair = { found -> screen = Screen.Pair(found) },
-                        onInstall = { screen = Screen.Install },
-                    )
+                    Screen.List -> {
+                        val back = previousTv?.let { tv -> { open(tv) } }
+                        if (back != null) BackHandler { back() }
+                        TvListScreen(
+                            onOpen = { tv -> open(tv) },
+                            onPair = { found -> screen = Screen.Pair(found) },
+                            onInstall = { screen = Screen.Install },
+                            onBack = back,
+                        )
+                    }
                     Screen.Install -> {
                         BackHandler { screen = Screen.List }
                         om.yousef.shashati.remote.ui.InstallScreen(onClose = { screen = Screen.List })
@@ -74,7 +81,7 @@ class MainActivity : ComponentActivity() {
                     Screen.Remote -> {
                         BackHandler { moveTaskToBack(true) }
                         RemoteScreen(
-                            onSwitchTv = { Controller.disconnect(); Controller.select(null); TvStore.lastHost = null; screen = Screen.List },
+                            onSwitchTv = { previousTv = Controller.tv; Controller.disconnect(); Controller.select(null); TvStore.lastHost = null; screen = Screen.List },
                             onRepair = {
                                 val tv = Controller.tv ?: return@RemoteScreen
                                 Controller.disconnect()

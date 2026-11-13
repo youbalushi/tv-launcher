@@ -134,10 +134,7 @@ fun InstallScreen(onClose: () -> Unit) {
             Modifier.fillMaxSize().systemBarsPadding().verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("تثبيت شاشتي", fontSize = 26.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                TextButtonGlass("رجوع") { if (!running) onClose() }
-            }
+            BackHeader("تثبيت شاشتي", "تثبيت لأول مرة أو تحديث") { if (!running) onClose() }
             Card {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("قبل البدء، على التلفزيون:", color = C.gold, fontWeight = FontWeight.Medium)

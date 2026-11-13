@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -116,7 +117,7 @@ fun Field(
 }
 
 @Composable
-fun TvListScreen(onOpen: (SavedTv) -> Unit, onPair: (FoundTv) -> Unit, onInstall: () -> Unit = {}) {
+fun TvListScreen(onOpen: (SavedTv) -> Unit, onPair: (FoundTv) -> Unit, onInstall: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     val context = LocalContext.current
     var saved by remember { mutableStateOf(TvStore.all()) }
     val found = remember { mutableStateListOf<FoundTv>() }
@@ -136,8 +137,7 @@ fun TvListScreen(onOpen: (SavedTv) -> Unit, onPair: (FoundTv) -> Unit, onInstall
         ) {
             item {
                 Column(Modifier.padding(top = 28.dp, bottom = 8.dp)) {
-                    Text("ريموت شاشتي", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
-                    Text("اختر التلفزيون اللي تبي تتحكم فيه", color = C.dim)
+                    BackHeader("ريموت شاشتي", "اختر التلفزيون اللي تبي تتحكم فيه", onBack)
                 }
             }
             if (saved.isNotEmpty()) {
@@ -266,16 +266,10 @@ fun PairScreen(tv: FoundTv, onDone: (SavedTv) -> Unit, onCancel: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         Background()
         Column(
-            Modifier.fillMaxSize().padding(22.dp),
+            Modifier.fillMaxSize().systemBarsPadding().padding(22.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("ربط $tvName", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-                    Text("الخطوة $step من 2", color = C.faint, fontSize = 13.sp)
-                }
-                TextButtonGlass("إلغاء", onClick = onCancel)
-            }
+            BackHeader("ربط $tvName", "الخطوة $step من 2", onCancel)
 
             Card {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {

@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -181,5 +183,23 @@ fun Pill(text: String, selected: Boolean, onClick: () -> Unit) {
             color = if (selected) C.dark else Color.White,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
         )
+    }
+}
+
+
+/** Page header with a back arrow (on the right, pointing right, as in Arabic apps). */
+@Composable
+fun BackHeader(title: String, subtitle: String? = null, onBack: (() -> Unit)?) {
+    androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+        if (onBack != null) {
+            GlassButton(Modifier.size(46.dp), shape = androidx.compose.foundation.shape.CircleShape, onPress = onBack) {
+                LineIcon(Ic.Right, size = 22.dp)
+            }
+            androidx.compose.foundation.layout.Spacer(Modifier.width(12.dp))
+        }
+        androidx.compose.foundation.layout.Column {
+            Text(title, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            if (subtitle != null) Text(subtitle, color = C.dim, fontSize = 13.sp)
+        }
     }
 }
