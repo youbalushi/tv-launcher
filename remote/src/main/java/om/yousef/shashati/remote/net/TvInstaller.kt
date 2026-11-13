@@ -93,6 +93,83 @@ class TvInstaller(private val context: Context, private val log: (String) -> Uni
         shell(d, "am start -n $PKG/.MainActivity")
     }
 
+    /** Google Drive file id from any share link (file/d/ID, open?id=ID, uc?id=ID) or a bare id. */
+    fun driveId(link: String): String? {
+        val t = link.trim()
+        Regex("/d/([A-Za-z0-9_-]{20,})").find(t)?.let { return it.groupValues[1] }
+        Regex("[?&]id=([A-Za-z0-9_-]{20,})").find(t)?.let { return it.groupValues[1] }
+        return if (t.matches(Regex("[A-Za-z0-9_-]{20,}"))) t else null
+    }
+
+    /**
+     * Downloads shashati_files.zip from Google Drive (shared "anyone with the link").
+     * Large files get a "can't scan for viruses" page first; its form is followed automatically.
+     */
+    fun downloadDrive(link: String, onProgress: (Int) -> Unit): File {
+        val id = driveId(link) ?: throw IllegalArgumentException("رابط درايف غير صحيح")
+        val out = File(context.cacheDir, "shashati_files.zip")
+        var url = "https://drive.usercontent.google.com/download?id=$id&export=download&confirm=t"
+        repeat(3) {
+            val c = URL(url).openConnection() as HttpURLConnection
+            c.instanceFollowRedirects = true
+            c.connectTimeout = 15_000
+            c.readTimeout = 60_000
+            val total = c.contentLengthLong
+            val type = c.contentType ?: ""
+            if (type.startsWith("text/html")) {
+                val html = c.inputStream.bufferedReader().use { it.readText() }
+                c.disconnect()
+                val action = Regex("action=\"([^\"]+)\"").find(html)?.groupValues?.get(1)
+                    ?: throw IllegalStateException("درايف رفض التنزيل. تأكد إن الملف مشارك لأي أحد عنده الرابط")
+                val inputs = Regex("name=\"([^\"]+)\" value=\"([^\"]*)\"").findAll(html)
+                    .joinToString("&") { "${it.groupValues[1]}=${java.net.URLEncoder.encode(it.groupValues[2], "UTF-8")}" }
+                url = action.replace("&amp;", "&") + (if (action.contains("?")) "&" else "?") + inputs
+                return@repeat
+            }
+            c.inputStream.use { input ->
+                out.outputStream().use { o ->
+                    val buf = ByteArray(64 * 1024)
+                    var done = 0L
+                    while (true) {
+                        val n = input.read(buf)
+                        if (n < 0) break
+                        o.write(buf, 0, n)
+                        done += n
+                        if (total > 0) onProgress((done * 100 / total).toInt())
+                    }
+                }
+            }
+            c.disconnect()
+            log("تم تنزيل ملفات شاشتي من درايف (${out.length() / 1024 / 1024} ميجا)")
+            return out
+        }
+        throw IllegalStateException("ما قدرت أنزّل الملف من درايف")
+    }
+
+    /** Puts every logos/… and adhkar/… file from the zip on the TV. */
+    fun pushZip(d: Dadb, zip: File): Int {
+        val tmp = File(context.cacheDir, "zip").apply { deleteRecursively(); mkdirs() }
+        var count = 0
+        java.util.zip.ZipFile(zip).use { z ->
+            for (e in z.entries()) {
+                if (e.isDirectory) continue
+                val parts = e.name.replace('\\', '/').split('/').filter { it.isNotEmpty() }
+                val folder = parts.dropLast(1).lastOrNull()?.lowercase() ?: continue
+                val name = parts.last()
+                if (folder != "logos" && folder != "adhkar") continue
+                if (name.startsWith(".")) continue
+                val f = File(tmp, name)
+                z.getInputStream(e).use { i -> f.outputStream().use { i.copyTo(it) } }
+                d.shell("mkdir -p $DATA/$folder")
+                d.push(f, "$DATA/$folder/$name")
+                f.delete()
+                count++
+            }
+        }
+        log("نُقل $count ملف (شعارات وأذكار)")
+        return count
+    }
+
     /** Copies the owner's logos and adhkar recordings from another TV that already has them. */
     fun copyFiles(from: Dadb, to: Dadb): Int {
         val tmp = File(context.cacheDir, "copy").apply { deleteRecursively(); mkdirs() }

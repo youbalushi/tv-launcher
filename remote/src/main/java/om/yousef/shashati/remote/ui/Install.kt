@@ -62,11 +62,12 @@ fun InstallScreen(onClose: () -> Unit) {
     val choices = (saved.map { it.host to it.name } + found.map { it.host to it.name }).distinctBy { it.first }
 
     var host by remember { mutableStateOf("") }
-    var copyFrom by remember { mutableStateOf<String?>(null) }
+    val prefs = remember { context.getSharedPreferences("remote", android.content.Context.MODE_PRIVATE) }
+    var driveLink by remember { mutableStateOf(prefs.getString("driveLink", "") ?: "") }
     var running by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0) }
     val steps = remember { mutableStateListOf(St.Wait, St.Wait, St.Wait, St.Wait, St.Wait) }
-    val titles = listOf("تنزيل آخر نسخة من شاشتي", "الاتصال بالتلفزيون", "التثبيت", "تفعيل زر Home والأذان وشاشة التوقف", "نسخ الشعارات والأذكار")
+    val titles = listOf("تنزيل آخر نسخة من شاشتي", "الاتصال بالتلفزيون", "التثبيت", "تفعيل زر Home والأذان وشاشة التوقف", "تنزيل ونقل الشعارات والأذكار من درايف")
     var message by remember { mutableStateOf<String?>(null) }
     val logs = remember { mutableStateListOf<String>() }
 
@@ -99,12 +100,12 @@ fun InstallScreen(onClose: () -> Unit) {
                     steps[3] = St.Ok
 
                     step = 4
-                    val src = copyFrom
-                    if (src == null) steps[4] = St.Skip else {
+                    val link = driveLink.trim()
+                    if (link.isEmpty()) steps[4] = St.Skip else {
                         steps[4] = St.Run
                         withContext(Dispatchers.IO) {
-                            val from = inst.connect(src)
-                            try { inst.copyFiles(from, tv) } finally { runCatching { from.close() } }
+                            val zip = inst.downloadDrive(link) { p -> scope.launch { progress = p } }
+                            inst.pushZip(tv, zip)
                         }
                         steps[4] = St.Ok
                     }
@@ -158,11 +159,12 @@ fun InstallScreen(onClose: () -> Unit) {
                 Modifier.fillMaxWidth(), KeyboardOptions(keyboardType = KeyboardType.Decimal), ltr = true
             )
 
-            Text("نسخ الشعارات وتسجيلات الأذكار من تلفزيون ثاني (اختياري)", color = C.gold, fontWeight = FontWeight.Medium)
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Pill("بدون", copyFrom == null) { copyFrom = null }
-                choices.filter { it.first != host }.forEach { (h, n) -> Pill("من $n · $h", copyFrom == h) { copyFrom = h } }
-            }
+            Text("رابط ملف الشعارات والأذكار في Google Drive", color = C.gold, fontWeight = FontWeight.Medium)
+            Field(
+                driveLink, { driveLink = it.trim(); prefs.edit().putString("driveLink", driveLink).apply() },
+                "الصق رابط shashati_files.zip", Modifier.fillMaxWidth(), ltr = true
+            )
+            Text("يُحفظ الرابط في الجوال، فتلصقه مرة وحدة بس. اتركه فاضي إذا ما تبي تنقل الملفات.", color = C.faint, fontSize = 12.sp)
 
             GoldButton(
                 if (running) "جاري التثبيت…" else "ابدأ التثبيت",
@@ -185,7 +187,7 @@ fun InstallScreen(onClose: () -> Unit) {
                             }
                             Spacer(Modifier.width(12.dp))
                             Text(
-                                t + if (i == 0 && steps[0] == St.Run) " ($progress%)" else if (steps[i] == St.Skip) " (تم التخطي)" else "",
+                                t + if ((i == 0 || i == 4) && steps[i] == St.Run) " ($progress%)" else if (steps[i] == St.Skip) " (تم التخطي)" else "",
                                 color = if (steps[i] == St.Wait) C.faint else Color.White, fontSize = 15.sp
                             )
                         }
