@@ -207,7 +207,7 @@ class PlayerActivity : ComponentActivity() {
 
     private fun openPanel() {
         val cur = channels[index]
-        panelTab = tabs.indexOfFirst { it.first == cur.category }.takeIf { it >= 0 } ?: 0
+        panelTab = 0 // always opens on «الكل»
         panelSel = tabList(panelTab).indexOfFirst { it.id == cur.id }.coerceAtLeast(0)
         panelOpen = true
         hideJob?.cancel()
@@ -217,7 +217,7 @@ class PlayerActivity : ComponentActivity() {
 
     private fun touchPanel() {
         panelJob?.cancel()
-        panelJob = lifecycleScope.launch { delay(8000); panelOpen = false }
+        // The list stays until OK on the playing channel or BACK — no auto-hide.
     }
 
     private fun closePanel() {
@@ -228,11 +228,14 @@ class PlayerActivity : ComponentActivity() {
     private fun playFromPanel() {
         val list = tabList(panelTab)
         val ch = list.getOrNull(panelSel) ?: return
-        closePanel()
-        if (ch.id == channels[index].id) return
+        // OK on the channel already playing closes the list; any other channel plays and the list stays.
+        if (ch.id == channels[index].id) { closePanel(); return }
         channels = list
         index = panelSel
         playCurrent()
+        hideJob?.cancel()
+        showInfo = false
+        touchPanel()
     }
 
     private fun playCurrent() {
