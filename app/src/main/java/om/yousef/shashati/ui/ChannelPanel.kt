@@ -97,7 +97,7 @@ fun ChannelPanel(
                 }
             }
             Spacer(Modifier.height(8.dp))
-            Text("▲▼ تنقّل  ·  OK تشغيل  ·  OK مرة ثانية أو رجوع إغلاق  ·  ◀ ▶ الأقسام", fontSize = 10.sp, color = C.faint)
+            Text("▲▼ تنقّل · ◀▶ أقسام · OK تشغيل · OK ثانية أو رجوع: إغلاق", fontSize = 10.sp, color = C.faint)
         }
     }
 }
