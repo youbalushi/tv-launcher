@@ -8,6 +8,8 @@ import om.yousef.shashati.data.Prefs
 import om.yousef.shashati.ui.AppTheme
 import om.yousef.shashati.ui.HomeScreen
 import om.yousef.shashati.ui.ScreensaverContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -32,6 +34,26 @@ class DesignSnapshots {
     @Test
     fun home() = paparazzi.snapshot {
         AppTheme { HomeScreen(version = 0, onOpenChannels = {}, onOpenSettings = {}, onLaunchApp = {}) }
+    }
+
+    @Test
+    fun channelPanel() = paparazzi.snapshot {
+        AppTheme {
+            androidx.compose.foundation.layout.Box(
+                androidx.compose.ui.Modifier.fillMaxSize()
+                    .background(androidx.compose.ui.graphics.Color(0xFF3A4A66))
+            ) {
+                val all = om.yousef.shashati.data.ChannelRepository.load(paparazzi.context).channels
+                val news = all.filter { it.category == "news" }
+                androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.align(androidx.compose.ui.Alignment.TopEnd)) {
+                    om.yousef.shashati.ui.ChannelPanel(
+                        tabs = listOf("الكل", "عُمان", "إخبارية", "عائلية وخليجية", "المفضلة"), tab = 2,
+                        list = news, selected = 2, playingId = news.first().id,
+                        numbers = all.mapIndexed { i, c -> c.id to i + 1 }.toMap(),
+                    )
+                }
+            }
+        }
     }
 
     @Test

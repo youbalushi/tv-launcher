@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,7 +54,7 @@ import om.yousef.shashati.ui.AppTheme
 import om.yousef.shashati.ui.C
 import om.yousef.shashati.ui.Players
 
-/** Full-screen live channel. Up/Down change channel, OK shows info, long OK toggles favourite. */
+/** Full-screen live channel. Up/Down change channel, OK opens the channel list, long OK toggles favourite. */
 @OptIn(UnstableApi::class)
 class PlayerActivity : ComponentActivity() {
     private lateinit var exo: ExoPlayer
@@ -67,11 +68,24 @@ class PlayerActivity : ComponentActivity() {
     private var favs by mutableStateOf(ChannelRepository.favorites())
     private var hideJob: Job? = null
 
+    // Channel list over the video (OK opens it; the channel keeps playing).
+    private var allChannels: List<Channel> = emptyList()
+    private var tabs: List<Pair<String, String>> = emptyList() // id to name; "__all", categories, "__favs"
+    private var panelOpen by mutableStateOf(false)
+    private var panelTab by mutableIntStateOf(0)
+    private var panelSel by mutableIntStateOf(0)
+    private var panelJob: Job? = null
+    private var okLong = false
+    private var okDown = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        val all = ChannelRepository.load(this).channels
+        val loaded = ChannelRepository.load(this)
+        val all = loaded.channels
+        allChannels = all
+        tabs = listOf("__all" to "الكل") + loaded.categories.filter { c -> all.any { it.category == c.id } }.map { it.id to it.name } + listOf("__favs" to "المفضلة")
         numbers = all.mapIndexed { i, c -> c.id to i + 1 }.toMap()
         val ids = intent.getStringArrayExtra(EXTRA_IDS)?.toList() ?: all.map { it.id }
         channels = ids.mapNotNull { id -> all.firstOrNull { it.id == id } }
@@ -117,7 +131,7 @@ class PlayerActivity : ComponentActivity() {
                     }
 
                     AnimatedVisibility(
-                        visible = showInfo,
+                        visible = showInfo && !panelOpen,
                         enter = fadeIn(),
                         exit = fadeOut(),
                         modifier = Modifier.align(Alignment.BottomCenter)
@@ -162,9 +176,62 @@ class PlayerActivity : ComponentActivity() {
                             }
                         }
                     }
+
+                    AnimatedVisibility(
+                        visible = panelOpen,
+                        enter = fadeIn() + androidx.compose.animation.slideInHorizontally { -it / 3 },
+                        exit = fadeOut(),
+                        // TopEnd is the left side in this right-to-left layout
+                        modifier = Modifier.align(Alignment.TopEnd).fillMaxHeight()
+                    ) {
+                        om.yousef.shashati.ui.ChannelPanel(
+                            tabs = tabs.map { it.second },
+                            tab = panelTab,
+                            list = tabList(panelTab),
+                            selected = panelSel,
+                            playingId = channels[index].id,
+                            numbers = numbers,
+                        )
+                    }
                 }
             }
         }
+        playCurrent()
+    }
+
+    private fun tabList(tab: Int): List<Channel> = when (val id = tabs.getOrNull(tab)?.first) {
+        "__all", null -> allChannels
+        "__favs" -> allChannels.filter { it.id in favs }
+        else -> allChannels.filter { it.category == id }
+    }
+
+    private fun openPanel() {
+        val cur = channels[index]
+        panelTab = tabs.indexOfFirst { it.first == cur.category }.takeIf { it >= 0 } ?: 0
+        panelSel = tabList(panelTab).indexOfFirst { it.id == cur.id }.coerceAtLeast(0)
+        panelOpen = true
+        hideJob?.cancel()
+        showInfo = false
+        touchPanel()
+    }
+
+    private fun touchPanel() {
+        panelJob?.cancel()
+        panelJob = lifecycleScope.launch { delay(8000); panelOpen = false }
+    }
+
+    private fun closePanel() {
+        panelOpen = false
+        panelJob?.cancel()
+    }
+
+    private fun playFromPanel() {
+        val list = tabList(panelTab)
+        val ch = list.getOrNull(panelSel) ?: return
+        closePanel()
+        if (ch.id == channels[index].id) return
+        channels = list
+        index = panelSel
         playCurrent()
     }
 
@@ -203,19 +270,51 @@ class PlayerActivity : ComponentActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
-        when (event.keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_CHANNEL_UP -> { if (event.repeatCount == 0) change(-1); return true }
-            KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_CHANNEL_DOWN -> { if (event.repeatCount == 0) change(1); return true }
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                if (event.repeatCount == 0) flashInfo()
-                else if (event.repeatCount == 1) {
+        val code = event.keyCode
+        val isOk = code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER
+
+        // OK: short press opens the list (or plays the chosen channel); long press = favourite.
+        if (isOk) {
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                if (event.repeatCount == 0) { okDown = true; okLong = false }
+                else if (event.repeatCount == 1 && !panelOpen) {
+                    okLong = true
                     ChannelRepository.toggleFavorite(channels[index].id)
                     favs = ChannelRepository.favorites()
                     flashInfo()
                 }
+            } else if (event.action == KeyEvent.ACTION_UP && okDown) {
+                okDown = false
+                if (!okLong) { if (panelOpen) playFromPanel() else openPanel() }
+            }
+            return true
+        }
+
+        if (panelOpen) {
+            if (code == KeyEvent.KEYCODE_BACK) {
+                if (event.action == KeyEvent.ACTION_UP) closePanel()
                 return true
             }
+            if (event.action != KeyEvent.ACTION_DOWN) return true
+            touchPanel()
+            val size = tabList(panelTab).size
+            when (code) {
+                KeyEvent.KEYCODE_DPAD_UP -> if (size > 0) panelSel = (panelSel - 1 + size) % size
+                KeyEvent.KEYCODE_DPAD_DOWN -> if (size > 0) panelSel = (panelSel + 1) % size
+                // Tabs run right-to-left: Left goes to the next tab, Right to the previous one.
+                KeyEvent.KEYCODE_DPAD_LEFT -> { panelTab = (panelTab + 1) % tabs.size; panelSel = 0 }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> { panelTab = (panelTab - 1 + tabs.size) % tabs.size; panelSel = 0 }
+                KeyEvent.KEYCODE_CHANNEL_UP -> { closePanel(); change(-1) }
+                KeyEvent.KEYCODE_CHANNEL_DOWN -> { closePanel(); change(1) }
+                else -> return super.dispatchKeyEvent(event)
+            }
+            return true
+        }
+
+        if (event.action != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(event)
+        when (code) {
+            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_CHANNEL_UP -> { if (event.repeatCount == 0) change(-1); return true }
+            KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_CHANNEL_DOWN -> { if (event.repeatCount == 0) change(1); return true }
             KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_INFO -> { flashInfo(); return true }
         }
         return super.dispatchKeyEvent(event)
