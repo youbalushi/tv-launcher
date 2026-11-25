@@ -117,7 +117,7 @@ fun Field(
 }
 
 @Composable
-fun TvListScreen(onOpen: (SavedTv) -> Unit, onPair: (FoundTv) -> Unit, onInstall: () -> Unit = {}, onBack: (() -> Unit)? = null) {
+fun TvListScreen(onOpen: (SavedTv) -> Unit, onPair: (FoundTv) -> Unit, onInstall: () -> Unit = {}, onSpeed: () -> Unit = {}, onBack: (() -> Unit)? = null) {
     val context = LocalContext.current
     var saved by remember { mutableStateOf(TvStore.all()) }
     val found = remember { mutableStateListOf<FoundTv>() }
@@ -197,6 +197,14 @@ fun TvListScreen(onOpen: (SavedTv) -> Unit, onPair: (FoundTv) -> Unit, onInstall
                     Column(Modifier.fillMaxWidth().padding(18.dp)) {
                         Text("تثبيت شاشتي على تلفزيون", color = C.gold, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                         Text("تثبيت لأول مرة أو تحديث، بدون لابتوب", color = C.dim, fontSize = 13.sp)
+                    }
+                }
+            }
+            item {
+                GlassButton(Modifier.fillMaxWidth(), onPress = onSpeed) {
+                    Column(Modifier.fillMaxWidth().padding(18.dp)) {
+                        Text("تسريع التلفزيون", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                        Text("حركات أسرع وتعطيل التطبيقات اللي ما تستخدمها", color = C.dim, fontSize = 13.sp)
                     }
                 }
             }

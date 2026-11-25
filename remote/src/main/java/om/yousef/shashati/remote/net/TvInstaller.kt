@@ -191,4 +191,61 @@ class TvInstaller(private val context: Context, private val log: (String) -> Uni
         }
         return count
     }
+
+    // ---------- تسريع التلفزيون ----------
+
+    data class App(val pkg: String, val label: String, val note: String, val suggested: Boolean, val disabled: Boolean)
+
+    /** Known apps that are safe to turn off. suggested = ticked by default. */
+    private val known = linkedMapOf(
+        "com.google.android.tvrecommendations" to Triple("توصيات جوجل", "تشتغل بالخلفية لعرض اقتراحات", true),
+        "com.google.android.leanbacklauncher.recommendations" to Triple("توصيات الواجهة", "تشتغل بالخلفية لعرض اقتراحات", true),
+        "com.google.android.play.games" to Triple("Google Play Games", "", true),
+        "com.google.android.videos" to Triple("Google TV / أفلام Play", "", true),
+        "com.google.android.feedback" to Triple("إرسال الملاحظات لجوجل", "", true),
+        "com.android.printspooler" to Triple("خدمة الطباعة", "", true),
+        "com.google.android.youtube.tvmusic" to Triple("YouTube Music", "", false),
+        "com.netflix.ninja" to Triple("Netflix", "", false),
+        "com.amazon.amazonvideo.livingroom" to Triple("Prime Video", "", false),
+        "com.google.android.apps.mediashell" to Triple("Chromecast", "يلزم إذا تعرض من الجوال للتلفزيون", false),
+        "com.mitv.tvhome.atv" to Triple("واجهة شاومي PatchWall", "الواجهة الأصلية — شاشتي تغني عنها", false),
+        "com.mitv.tvhome" to Triple("واجهة شاومي PatchWall", "الواجهة الأصلية — شاشتي تغني عنها", false),
+    )
+
+    /** Never offered: the system, remote/voice, store, YouTube, and شاشتي itself. */
+    private val keep = setOf(
+        PKG, "com.android.vending", "com.google.android.youtube.tv", "com.google.android.katniss",
+        "com.android.tv.settings", "com.google.android.tvlauncher", "com.google.android.gms",
+        "com.google.android.tv.remote.service", "com.android.systemui",
+    )
+
+    /** Apps on the TV that can be turned off: the known list, any other launchable app, and anything already off. */
+    fun scanApps(d: Dadb): List<App> {
+        val enabled = d.shell("pm list packages -e").output.lines().mapNotNull { it.removePrefix("package:").trim().ifEmpty { null } }.toSet()
+        val disabledNow = d.shell("pm list packages -d").output.lines().mapNotNull { it.removePrefix("package:").trim().ifEmpty { null } }.toSet()
+        val launchable = d.shell("cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.LEANBACK_LAUNCHER")
+            .output.lines().mapNotNull { l -> l.trim().substringBefore('/').takeIf { l.contains('/') && it.isNotEmpty() } }.toSet()
+        val out = mutableListOf<App>()
+        for ((pkg, info) in known) {
+            if (pkg in enabled || pkg in disabledNow) out += App(pkg, info.first, info.second, info.third, pkg in disabledNow)
+        }
+        for (pkg in (launchable + disabledNow).sorted()) {
+            if (pkg in keep || pkg in known || out.any { it.pkg == pkg }) continue
+            out += App(pkg, pkg.substringAfterLast('.'), pkg, false, pkg in disabledNow)
+        }
+        log("وُجد ${out.size} تطبيق ممكن تعطيله")
+        return out
+    }
+
+    /** Faster animations, then turns apps off/on to match [off]. Disabling is per-user and reversible. */
+    fun speedUp(d: Dadb, apps: List<App>, off: Set<String>) {
+        for (k in listOf("window_animation_scale", "transition_animation_scale", "animator_duration_scale"))
+            shell(d, "settings put global $k 0.5")
+        for (a in apps) {
+            val want = a.pkg in off
+            if (want && !a.disabled) shell(d, "pm disable-user --user 0 ${a.pkg}")
+            if (!want && a.disabled) shell(d, "pm enable ${a.pkg}")
+        }
+        shell(d, "am kill-all")
+    }
 }
